@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Граф знань «Дроби» — Квант</title>
+</head>
+<body>
+<title>Граф знань «Дроби» — Квант</title>
+<style>
+  :root {
+    --bg: #eef0f4;
+    --surface: #ffffff;
+    --surface-2: #f7f8fb;
+    --ink: #1a1d29;
+    --muted: #5b6072;
+    --faint: #8b90a3;
+    --line: #d9dce5;
+    --accent: #4f46e5;
+    --shadow: 0 6px 24px rgba(26, 29, 41, 0.12), 0 1px 3px rgba(26, 29, 41, 0.08);
+
+    --t-mandatory: #4f46e5;
+    --t-desirable: #0d9488;
+    --t-recommended: #d97706;
+    --t-deepening: #9333ea;
+    --t-alternative: #8b90a3;
+
+    --node-stroke: #cdd1dd;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0e1017;
+      --surface: #191c26;
+      --surface-2: #12151d;
+      --ink: #e8eaf1;
+      --muted: #9aa0b4;
+      --faint: #6a7086;
+      --line: #2a2e3c;
+      --accent: #8b8bf5;
+      --shadow: 0 8px 28px rgba(0, 0, 0, 0.45), 0 1px 3px rgba(0, 0, 0, 0.4);
+
+      --t-mandatory: #8b8bf5;
+      --t-desirable: #2dd4bf;
+      --t-recommended: #fbbf24;
+      --t-deepening: #c084fc;
+      --t-alternative: #6a7086;
+
+      --node-stroke: #333849;
+    }
+  }
+  :root[data-theme="light"] {
+    --bg: #eef0f4; --surface: #ffffff; --surface-2: #f7f8fb; --ink: #1a1d29;
+    --muted: #5b6072; --faint: #8b90a3; --line: #d9dce5; --accent: #4f46e5;
+    --shadow: 0 6px 24px rgba(26,29,41,.12), 0 1px 3px rgba(26,29,41,.08);
+    --t-mandatory:#4f46e5; --t-desirable:#0d9488; --t-recommended:#d97706;
+    --t-deepening:#9333ea; --t-alternative:#8b90a3; --node-stroke:#cdd1dd;
+  }
+  :root[data-theme="dark"] {
+    --bg:#0e1017; --surface:#191c26; --surface-2:#12151d; --ink:#e8eaf1;
+    --muted:#9aa0b4; --faint:#6a7086; --line:#2a2e3c; --accent:#8b8bf5;
+    --shadow:0 8px 28px rgba(0,0,0,.45), 0 1px 3px rgba(0,0,0,.4);
+    --t-mandatory:#8b8bf5; --t-desirable:#2dd4bf; --t-recommended:#fbbf24;
+    --t-deepening:#c084fc; --t-alternative:#6a7086; --node-stroke:#333849;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { position: fixed; inset: 0; }
+
+  svg#graph { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  svg#graph.panning { cursor: grabbing; }
+
+  /* Toolbar */
+  .toolbar {
+    position: absolute; top: 16px; left: 16px; z-index: 5;
+    display: flex; flex-direction: column; gap: 12px; max-width: 300px;
+  }
+  .titlecard {
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow); padding: 14px 16px;
+  }
+  .titlecard h1 { margin: 0; font-size: 17px; letter-spacing: -0.01em; }
+  .titlecard p { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.45; }
+  .eyebrow {
+    font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.11em;
+    color: var(--accent); font-weight: 600; margin-bottom: 3px;
+  }
+
+  .controls { display: flex; gap: 6px; }
+  .controls button {
+    flex: 1; font: inherit; font-size: 12px; font-weight: 500;
+    background: var(--surface); color: var(--ink);
+    border: 1px solid var(--line); border-radius: 10px; padding: 8px 6px;
+    cursor: pointer; box-shadow: var(--shadow); transition: background .12s, border-color .12s;
+  }
+  .controls button:hover { background: var(--surface-2); border-color: var(--accent); }
+  .controls button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  /* Legend */
+  .legend {
+    position: absolute; bottom: 16px; left: 16px; z-index: 5;
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 14px; box-shadow: var(--shadow); padding: 12px 14px; max-width: 260px;
+  }
+  .legend h2 { margin: 0 0 8px; font-size: 10.5px; text-transform: uppercase;
+    letter-spacing: 0.1em; color: var(--faint); font-weight: 600; }
+  .legend .row { display: flex; align-items: center; gap: 9px; font-size: 12px; padding: 2.5px 0; color: var(--muted); }
+  .legend .swatch { width: 26px; height: 0; border-top-width: 3px; border-top-style: solid; border-radius: 2px; flex: none; }
+  .legend .hint { margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line);
+    font-size: 11px; color: var(--faint); line-height: 1.5; }
+
+  /* Detail panel */
+  .panel {
+    position: absolute; top: 16px; right: 16px; bottom: 16px; z-index: 6;
+    width: 320px; max-width: calc(100vw - 32px);
+    background: var(--surface); border: 1px solid var(--line);
+    border-radius: 16px; box-shadow: var(--shadow);
+    display: flex; flex-direction: column;
+    transform: translateX(calc(100% + 24px)); transition: transform .28s cubic-bezier(.4,0,.2,1);
+    overflow: hidden;
+  }
+  .panel.open { transform: none; }
+  @media (prefers-reduced-motion: reduce) { .panel { transition: none; } }
+  .panel-head { padding: 18px 18px 14px; border-bottom: 1px solid var(--line); position: relative; }
+  .panel-head .grade-chip { display: inline-block; font-size: 11px; font-weight: 600;
+    padding: 3px 9px; border-radius: 999px; margin-bottom: 8px; }
+  .panel-head h3 { margin: 0; font-size: 18px; line-height: 1.25; letter-spacing: -0.01em; padding-right: 28px; }
+  .panel-close {
+    position: absolute; top: 14px; right: 14px; width: 26px; height: 26px;
+    border: 1px solid var(--line); background: var(--surface-2); border-radius: 8px;
+    cursor: pointer; color: var(--muted); font-size: 15px; line-height: 1; display: grid; place-items: center;
+  }
+  .panel-close:hover { color: var(--ink); border-color: var(--accent); }
+  .panel-body { padding: 16px 18px 20px; overflow-y: auto; }
+
+  .metrics { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 18px; }
+  .metric { background: var(--surface-2); border: 1px solid var(--line); border-radius: 10px; padding: 9px 11px; }
+  .metric .k { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--faint); }
+  .metric .v { font-size: 15px; font-weight: 600; margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .dots { letter-spacing: 1px; }
+
+  .section-label { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.09em;
+    color: var(--faint); font-weight: 600; margin: 18px 0 8px; }
+  ul.clean { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+  ul.clean.bul li { position: relative; padding-left: 16px; font-size: 12.5px; color: var(--muted); line-height: 1.4; }
+  ul.clean.bul li::before { content: ""; position: absolute; left: 3px; top: 7px; width: 5px; height: 5px;
+    border-radius: 50%; background: var(--accent); }
+
+  .link-node {
+    display: flex; align-items: center; gap: 8px; width: 100%; text-align: left;
+    background: var(--surface-2); border: 1px solid var(--line); border-radius: 9px;
+    padding: 8px 10px; cursor: pointer; font: inherit; color: var(--ink); transition: border-color .12s, background .12s;
+  }
+  .link-node:hover { border-color: var(--accent); background: var(--surface); }
+  .link-node:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .link-node .bar { width: 4px; align-self: stretch; border-radius: 3px; flex: none; }
+  .link-node .lt { flex: 1; font-size: 12.5px; line-height: 1.3; }
+  .link-node .meta { font-size: 10.5px; color: var(--faint); margin-top: 2px; font-variant-numeric: tabular-nums; }
+  .empty { font-size: 12px; color: var(--faint); font-style: italic; }
+
+  /* SVG element styling driven by JS classes */
+  .edge { fill: none; transition: opacity .18s, stroke-width .18s; }
+  .node-rect { transition: opacity .18s, stroke .18s; }
+  .node-g { cursor: pointer; }
+  .node-g text { user-select: none; pointer-events: none; }
+  .dim { opacity: 0.12; }
+  .node-title { font-size: 12px; font-weight: 500; }
+  .node-chip-text { font-size: 9.5px; font-weight: 700; }
+
+  @media (max-width: 720px) {
+    .toolbar { max-width: 200px; }
+    .legend { display: none; }
+    .panel { width: calc(100vw - 32px); }
+  }
+</style>
+
+<div id="app">
+  <svg id="graph" role="application" aria-label="Інтерактивний граф знань теми Дроби"></svg>
+
+  <div class="toolbar">
+    <div class="titlecard">
+      <div class="eyebrow">Квант · Граф знань</div>
+      <h1>Дроби</h1>
+      <p>Наскрізна тема НУШ, 2–6 класи. Клацни атом, щоб побачити передумови й залежні теми. Колесо — масштаб, тягни фон — рух.</p>
+    </div>
+    <div class="controls">
+      <button id="zoomIn" title="Збільшити">+</button>
+      <button id="zoomOut" title="Зменшити">−</button>
+      <button id="reset" title="Показати весь граф">Весь граф</button>
+      <button id="theme" title="Змінити тему">☾</button>
+    </div>
+  </div>
+
+  <div class="legend" id="legend">
+    <h2>Типи зв'язків</h2>
+    <div class="row"><span class="swatch" style="border-top-color: var(--t-mandatory)"></span> обов'язкова передумова</div>
+    <div class="row"><span class="swatch" style="border-top-color: var(--t-desirable)"></span> бажана передумова</div>
+    <div class="row"><span class="swatch" style="border-top-color: var(--t-recommended)"></span> рекомендована</div>
+    <div class="row"><span class="swatch" style="border-top-color: var(--t-deepening)"></span> поглиблення</div>
+    <div class="row"><span class="swatch" style="border-top-color: var(--t-alternative); border-top-style: dashed"></span> альтернатива</div>
+    <div class="hint">Товщина зв'язку = сила впливу (вага 0–1). Колонки — топологічні рівні: кожен зв'язок веде зліва направо.</div>
+  </div>
+
+  <aside class="panel" id="panel" aria-live="polite">
+    <div class="panel-head">
+      <button class="panel-close" id="panelClose" aria-label="Закрити">✕</button>
+      <span class="grade-chip" id="pGrade"></span>
+      <h3 id="pTitle"></h3>
+    </div>
+    <div class="panel-body" id="pBody"></div>
+  </aside>
+</div>
+
+<script>
+// ------- Дані графа (пілот «Дроби») -------
+const NODES = [
+  { id:'part-of-whole', title:'Частина цілого', grade:2, bloom:'Розуміння', difficulty:1, minutes:40, success:0.90, reps:2, threshold:0.8, comp:['Розуміє поняття частини від цілого предмета/множини'] },
+  { id:'halves-quarters', title:'Половина і чверть', grade:2, bloom:'Застосування', difficulty:1, minutes:40, success:0.85, reps:2, threshold:0.8, comp:['Знаходить половину, третину, чверть величини'] },
+  { id:'fraction-notation', title:'Запис звичайного дробу a/b', grade:3, bloom:'Розуміння', difficulty:2, minutes:45, success:0.80, reps:3, threshold:0.8, comp:['Читає й записує звичайні дроби','Розуміє чисельник і знаменник'] },
+  { id:'compare-fractions-like', title:'Порівняння дробів з однаковим знаменником', grade:4, bloom:'Застосування', difficulty:2, minutes:45, success:0.78, reps:2, threshold:0.8, comp:['Порівнює дроби з однаковими знаменниками'] },
+  { id:'proper-improper-mixed', title:'Правильні, неправильні дроби та мішані числа', grade:5, bloom:'Розуміння', difficulty:2, minutes:50, success:0.72, reps:3, threshold:0.8, comp:['Розрізняє типи дробів','Перетворює мішане число ↔ неправильний дріб'] },
+  { id:'add-sub-like-denominators', title:'Додавання і віднімання з однаковими знаменниками', grade:5, bloom:'Застосування', difficulty:2, minutes:50, success:0.75, reps:3, threshold:0.8, comp:['Додає й віднімає дроби з однаковими знаменниками'] },
+  { id:'decimal-notation', title:'Десяткові дроби', grade:5, bloom:'Розуміння', difficulty:2, minutes:50, success:0.74, reps:3, threshold:0.8, comp:['Читає й записує десяткові дроби','Розуміє розрядність'] },
+  { id:'equivalent-fractions', title:'Рівні дроби та скорочення', grade:6, bloom:'Застосування', difficulty:3, minutes:55, success:0.68, reps:4, threshold:0.8, comp:['Знаходить рівні дроби','Скорочує дроби'] },
+  { id:'common-denominator', title:'Зведення до спільного знаменника', grade:6, bloom:'Застосування', difficulty:3, minutes:55, success:0.62, reps:4, threshold:0.8, comp:['Зводить дроби до спільного знаменника'] },
+  { id:'add-sub-unlike-denominators', title:'Додавання і віднімання з різними знаменниками', grade:6, bloom:'Застосування', difficulty:3, minutes:60, success:0.58, reps:4, threshold:0.8, comp:['Додає й віднімає дроби з різними знаменниками'] },
+  { id:'multiply-fractions', title:'Множення дробів', grade:6, bloom:'Застосування', difficulty:3, minutes:50, success:0.66, reps:3, threshold:0.8, comp:['Множить звичайні дроби та мішані числа'] },
+  { id:'divide-fractions', title:'Ділення дробів', grade:6, bloom:'Застосування', difficulty:4, minutes:55, success:0.60, reps:4, threshold:0.8, comp:['Ділить звичайні дроби','Використовує обернений дріб'] },
+  { id:'fraction-decimal-conversion', title:'Перетворення звичайний ↔ десятковий дріб', grade:6, bloom:'Застосування', difficulty:3, minutes:50, success:0.63, reps:3, threshold:0.8, comp:['Перетворює звичайний дріб у десятковий і навпаки'] },
+  { id:'ratio', title:'Відношення', grade:6, bloom:'Розуміння', difficulty:3, minutes:45, success:0.65, reps:3, threshold:0.8, comp:['Розуміє відношення двох чисел як дріб'] },
+  { id:'proportion', title:'Пропорція', grade:6, bloom:'Застосування', difficulty:4, minutes:60, success:0.55, reps:4, threshold:0.8, comp:['Складає й розв’язує пропорції','Застосовує основну властивість пропорції'] },
+  { id:'percentages', title:'Відсотки', grade:6, bloom:'Застосування', difficulty:4, minutes:65, success:0.50, reps:5, threshold:0.8, comp:['Розуміє відсоток як соту частину','Знаходить відсоток від числа і число за його відсотком'] },
+];
+const EDGES = [
+  ['part-of-whole','halves-quarters',0.90,'mandatory'],
+  ['halves-quarters','fraction-notation',0.85,'mandatory'],
+  ['fraction-notation','compare-fractions-like',0.80,'mandatory'],
+  ['fraction-notation','proper-improper-mixed',0.85,'mandatory'],
+  ['compare-fractions-like','proper-improper-mixed',0.50,'desirable'],
+  ['proper-improper-mixed','add-sub-like-denominators',0.90,'mandatory'],
+  ['fraction-notation','equivalent-fractions',0.80,'mandatory'],
+  ['equivalent-fractions','common-denominator',0.95,'mandatory'],
+  ['common-denominator','add-sub-unlike-denominators',0.95,'mandatory'],
+  ['add-sub-like-denominators','add-sub-unlike-denominators',0.80,'mandatory'],
+  ['fraction-notation','multiply-fractions',0.70,'mandatory'],
+  ['equivalent-fractions','multiply-fractions',0.50,'desirable'],
+  ['multiply-fractions','divide-fractions',0.90,'mandatory'],
+  ['fraction-notation','decimal-notation',0.40,'desirable'],
+  ['decimal-notation','fraction-decimal-conversion',0.85,'mandatory'],
+  ['equivalent-fractions','fraction-decimal-conversion',0.70,'mandatory'],
+  ['fraction-notation','ratio',0.70,'mandatory'],
+  ['divide-fractions','ratio',0.60,'desirable'],
+  ['ratio','proportion',0.90,'mandatory'],
+  ['multiply-fractions','proportion',0.60,'desirable'],
+  ['fraction-notation','percentages',0.95,'mandatory'],
+  ['proportion','percentages',0.70,'recommended'],
+  ['fraction-decimal-conversion','percentages',0.40,'desirable'],
+].map(([from,to,weight,type])=>({from,to,weight,type}));
+
+const TYPE_LABEL = { mandatory:'обов’язкова', desirable:'бажана', recommended:'рекомендована', deepening:'поглиблення', alternative:'альтернатива' };
+const cssVar = (n)=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+function typeColor(t){ return cssVar('--t-'+t) || cssVar('--muted'); }
+
+// Grade chip colours (sequential indigo ramp), text colour chosen for contrast.
+const GRADE_STYLE = {
+  2:{bg:'#e0e7ff',fg:'#3730a3'}, 3:{bg:'#c7d2fe',fg:'#312e81'},
+  4:{bg:'#a5b4fc',fg:'#1e1b4b'}, 5:{bg:'#818cf8',fg:'#ffffff'},
+  6:{bg:'#6366f1',fg:'#ffffff'},
+};
+
+// ------- Індекси -------
+const byId = new Map(NODES.map(n=>[n.id,n]));
+const incoming = new Map(NODES.map(n=>[n.id,[]]));
+const outgoing = new Map(NODES.map(n=>[n.id,[]]));
+for(const e of EDGES){ outgoing.get(e.from).push(e); incoming.get(e.to).push(e); }
+
+function ancestors(id){ const s=new Set(),st=[id]; while(st.length){const c=st.pop(); for(const e of incoming.get(c)){ if(!s.has(e.from)){s.add(e.from);st.push(e.from);} }} return s; }
+function descendants(id){ const s=new Set(),st=[id]; while(st.length){const c=st.pop(); for(const e of outgoing.get(c)){ if(!s.has(e.to)){s.add(e.to);st.push(e.to);} }} return s; }
+
+// ------- Розкладка по топологічних рівнях -------
+const NODE_W=190, NODE_H=62, COL_GAP=90, ROW_GAP=26;
+const level = new Map();
+(function computeLevels(){
+  // топологічний порядок (Kahn)
+  const indeg = new Map(NODES.map(n=>[n.id, incoming.get(n.id).length]));
+  const q = NODES.filter(n=>indeg.get(n.id)===0).map(n=>n.id);
+  const order=[];
+  while(q.length){ const id=q.shift(); order.push(id); for(const e of outgoing.get(id)){ indeg.set(e.to,indeg.get(e.to)-1); if(indeg.get(e.to)===0) q.push(e.to); } }
+  for(const id of order){ let lv=0; for(const e of incoming.get(id)) lv=Math.max(lv, level.get(e.from)+1); level.set(id,lv); }
+})();
+
+const cols = [];
+for(const n of NODES){ const lv=level.get(n.id); (cols[lv] ??= []).push(n.id); }
+
+// Барицентрове впорядкування для зменшення перетинів
+const pos = new Map(); // id -> {row}
+cols.forEach(col=>col.forEach((id,i)=>pos.set(id,{row:i})));
+function sweep(dir){
+  const range = dir>0 ? [...cols.keys()] : [...cols.keys()].reverse();
+  for(const lv of range){
+    const col=cols[lv]; if(!col) continue;
+    const neigh = dir>0 ? incoming : outgoing;
+    const bary = new Map();
+    for(const id of col){
+      const ns=neigh.get(id).map(e=>pos.get(dir>0?e.from:e.to).row);
+      bary.set(id, ns.length? ns.reduce((a,b)=>a+b,0)/ns.length : pos.get(id).row);
+    }
+    col.sort((a,b)=>bary.get(a)-bary.get(b));
+    col.forEach((id,i)=>pos.get(id).row=i);
+  }
+}
+for(let i=0;i<6;i++){ sweep(1); sweep(-1); }
+
+// координати
+const layout = new Map();
+const maxRows = Math.max(...cols.map(c=>c.length));
+cols.forEach((col,lv)=>{
+  const colH = col.length*NODE_H + (col.length-1)*ROW_GAP;
+  const totalH = maxRows*NODE_H + (maxRows-1)*ROW_GAP;
+  const y0 = (totalH-colH)/2;
+  col.forEach((id,i)=>{
+    layout.set(id,{ x: lv*(NODE_W+COL_GAP), y: y0 + i*(NODE_H+ROW_GAP) });
+  });
+});
+let BOUNDS;
+(function(){
+  let minX=1e9,minY=1e9,maxX=-1e9,maxY=-1e9;
+  for(const {x,y} of layout.values()){ minX=Math.min(minX,x); minY=Math.min(minY,y); maxX=Math.max(maxX,x+NODE_W); maxY=Math.max(maxY,y+NODE_H); }
+  BOUNDS={minX,minY,maxX,maxY,w:maxX-minX,h:maxY-minY};
+})();
+
+// ------- Рендер SVG -------
+const SVGNS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('graph');
+const root=document.createElementNS(SVGNS,'g');
+svg.appendChild(root);
+const edgesG=document.createElementNS(SVGNS,'g'); root.appendChild(edgesG);
+const nodesG=document.createElementNS(SVGNS,'g'); root.appendChild(nodesG);
+
+function wrap(str,max){
+  const words=str.split(' '); const lines=[]; let cur='';
+  for(const w of words){
+    if((cur+' '+w).trim().length<=max) cur=(cur+' '+w).trim();
+    else { if(cur) lines.push(cur); cur=w; }
+  }
+  if(cur) lines.push(cur);
+  if(lines.length>3){ lines[2]=lines[2].slice(0,max-1)+'…'; lines.length=3; }
+  return lines;
+}
+
+const edgeEls=[];
+for(const e of EDGES){
+  const a=layout.get(e.from), b=layout.get(e.to);
+  const sx=a.x+NODE_W, sy=a.y+NODE_H/2, tx=b.x, ty=b.y+NODE_H/2;
+  const dx=Math.max(40,(tx-sx)*0.5);
+  const path=document.createElementNS(SVGNS,'path');
+  path.setAttribute('d',`M${sx},${sy} C${sx+dx},${sy} ${tx-dx},${ty} ${tx},${ty}`);
+  path.setAttribute('class','edge');
+  path.setAttribute('stroke',typeColor(e.type));
+  path.setAttribute('stroke-width',(1+e.weight*3.2).toFixed(2));
+  path.setAttribute('stroke-opacity','0.55');
+  path.setAttribute('stroke-linecap','round');
+  if(e.type==='alternative') path.setAttribute('stroke-dasharray','2 6');
+  edgesG.appendChild(path);
+  edgeEls.push({e,el:path});
+}
+
+const nodeEls=new Map();
+for(const n of NODES){
+  const p=layout.get(n.id);
+  const g=document.createElementNS(SVGNS,'g');
+  g.setAttribute('class','node-g');
+  g.setAttribute('transform',`translate(${p.x},${p.y})`);
+  g.setAttribute('tabindex','0');
+  g.setAttribute('role','button');
+  g.setAttribute('aria-label',n.title+', '+n.grade+' клас');
+
+  const rect=document.createElementNS(SVGNS,'rect');
+  rect.setAttribute('class','node-rect');
+  rect.setAttribute('width',NODE_W); rect.setAttribute('height',NODE_H);
+  rect.setAttribute('rx',12);
+  rect.setAttribute('fill','var(--surface)');
+  rect.setAttribute('stroke','var(--node-stroke)');
+  rect.setAttribute('stroke-width','1.5');
+  g.appendChild(rect);
+
+  // grade chip
+  const gs=GRADE_STYLE[n.grade];
+  const chip=document.createElementNS(SVGNS,'rect');
+  chip.setAttribute('x',10); chip.setAttribute('y',10);
+  chip.setAttribute('width',34); chip.setAttribute('height',17); chip.setAttribute('rx',8.5);
+  chip.setAttribute('fill',gs.bg);
+  g.appendChild(chip);
+  const chipT=document.createElementNS(SVGNS,'text');
+  chipT.setAttribute('x',27); chipT.setAttribute('y',22.5);
+  chipT.setAttribute('text-anchor','middle'); chipT.setAttribute('class','node-chip-text');
+  chipT.setAttribute('fill',gs.fg); chipT.textContent=n.grade+' кл.';
+  g.appendChild(chipT);
+
+  // title
+  const lines=wrap(n.title,26);
+  const t=document.createElementNS(SVGNS,'text');
+  t.setAttribute('class','node-title'); t.setAttribute('fill','var(--ink)');
+  t.setAttribute('x',12);
+  const startY = lines.length===1?46 : lines.length===2?40:34;
+  lines.forEach((ln,i)=>{
+    const ts=document.createElementNS(SVGNS,'tspan');
+    ts.setAttribute('x',12); ts.setAttribute('y',startY+i*13.5); ts.textContent=ln;
+    t.appendChild(ts);
+  });
+  g.appendChild(t);
+
+  g.addEventListener('click',(ev)=>{ ev.stopPropagation(); select(n.id); });
+  g.addEventListener('keydown',(ev)=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); select(n.id);} });
+  nodesG.appendChild(g);
+  nodeEls.set(n.id,{g,rect});
+}
+
+// ------- Pan / Zoom -------
+let tx=0,ty=0,k=1;
+function apply(){ root.setAttribute('transform',`translate(${tx},${ty}) scale(${k})`); }
+function fit(){
+  const r=svg.getBoundingClientRect();
+  const pad=80;
+  k=Math.min((r.width-pad*2)/BOUNDS.w,(r.height-pad*2)/BOUNDS.h,1.4);
+  tx=(r.width-BOUNDS.w*k)/2 - BOUNDS.minX*k;
+  ty=(r.height-BOUNDS.h*k)/2 - BOUNDS.minY*k;
+  apply();
+}
+function zoomAt(cx,cy,factor){
+  const nk=Math.min(2.6,Math.max(0.25,k*factor));
+  tx=cx-(cx-tx)*(nk/k); ty=cy-(cy-ty)*(nk/k); k=nk; apply();
+}
+svg.addEventListener('wheel',(e)=>{ e.preventDefault(); const r=svg.getBoundingClientRect();
+  zoomAt(e.clientX-r.left,e.clientY-r.top, e.deltaY<0?1.12:0.89); },{passive:false});
+
+let dragging=false,moved=false,lx=0,ly=0;
+svg.addEventListener('pointerdown',(e)=>{ dragging=true;moved=false;lx=e.clientX;ly=e.clientY; svg.setPointerCapture(e.pointerId); svg.classList.add('panning'); });
+svg.addEventListener('pointermove',(e)=>{ if(!dragging)return; const dx=e.clientX-lx,dy=e.clientY-ly; if(Math.abs(dx)+Math.abs(dy)>3)moved=true; tx+=dx;ty+=dy;lx=e.clientX;ly=e.clientY; apply(); });
+svg.addEventListener('pointerup',(e)=>{ dragging=false; svg.classList.remove('panning'); if(!moved && e.target===svg) deselect(); });
+
+document.getElementById('zoomIn').onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.2);};
+document.getElementById('zoomOut').onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,0.83);};
+document.getElementById('reset').onclick=()=>{ deselect(); fit(); };
+
+// ------- Тема -------
+document.getElementById('theme').onclick=()=>{
+  const cur=document.documentElement.getAttribute('data-theme')
+    || (matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const next=cur==='dark'?'light':'dark';
+  document.documentElement.setAttribute('data-theme',next);
+  // перефарбувати ребра (кольори з css-змінних читаються в JS)
+  for(const {e,el} of edgeEls) el.setAttribute('stroke',typeColor(e.type));
+  if(selected) select(selected,true);
+};
+
+// ------- Вибір / підсвічування -------
+let selected=null;
+function select(id,keepView){
+  selected=id;
+  const up=ancestors(id), down=descendants(id);
+  const relevant=new Set([id,...up,...down]);
+  for(const n of NODES){
+    const {g,rect}=nodeEls.get(n.id);
+    const on=relevant.has(n.id);
+    g.classList.toggle('dim',!on);
+    if(n.id===id){ rect.setAttribute('stroke','var(--accent)'); rect.setAttribute('stroke-width','2.5'); }
+    else { rect.setAttribute('stroke','var(--node-stroke)'); rect.setAttribute('stroke-width','1.5'); }
+  }
+  for(const {e,el} of edgeEls){
+    const active = (relevant.has(e.from)&&relevant.has(e.to)) &&
+      ( (up.has(e.from)||e.from===id) && (up.has(e.to)||e.to===id) ||
+        (down.has(e.to)||e.to===id) && (down.has(e.from)||e.from===id) );
+    el.classList.toggle('dim',!active);
+    el.setAttribute('stroke-opacity',active?'0.95':'0.55');
+    el.setAttribute('stroke-width',((1+e.weight*3.2)*(active?1.35:1)).toFixed(2));
+  }
+  renderPanel(id);
+}
+function deselect(){
+  selected=null;
+  for(const n of NODES){ const {g,rect}=nodeEls.get(n.id); g.classList.remove('dim');
+    rect.setAttribute('stroke','var(--node-stroke)'); rect.setAttribute('stroke-width','1.5'); }
+  for(const {e,el} of edgeEls){ el.classList.remove('dim'); el.setAttribute('stroke-opacity','0.55'); el.setAttribute('stroke-width',(1+e.weight*3.2).toFixed(2)); }
+  document.getElementById('panel').classList.remove('open');
+}
+
+// ------- Панель деталей -------
+function renderPanel(id){
+  const n=byId.get(id);
+  const panel=document.getElementById('panel');
+  const gs=GRADE_STYLE[n.grade];
+  const chip=document.getElementById('pGrade');
+  chip.textContent=n.grade+' клас'; chip.style.background=gs.bg; chip.style.color=gs.fg;
+  document.getElementById('pTitle').textContent=n.title;
+
+  const dots=(v)=>'●'.repeat(v)+'○'.repeat(5-v);
+  const pct=(v)=>Math.round(v*100)+'%';
+  const linkList=(edges,dir)=> edges.length? edges.map(e=>{
+    const other=byId.get(dir==='in'?e.from:e.to);
+    return `<button class="link-node" data-goto="${other.id}">
+      <span class="bar" style="background:${typeColor(e.type)}"></span>
+      <span class="lt">${other.title}<span class="meta">${TYPE_LABEL[e.type]} · вага ${e.weight.toFixed(2)} · ${other.grade} кл.</span></span>
+    </button>`;
+  }).join('') : '<div class="empty">—</div>';
+
+  document.getElementById('pBody').innerHTML=`
+    <div class="metrics">
+      <div class="metric"><div class="k">Складність</div><div class="v dots">${dots(n.difficulty)}</div></div>
+      <div class="metric"><div class="k">Час вивчення</div><div class="v">${n.minutes} хв</div></div>
+      <div class="metric"><div class="k">Рівень Блума</div><div class="v" style="font-size:13px">${n.bloom}</div></div>
+      <div class="metric"><div class="k">Поріг готовності</div><div class="v">${pct(n.threshold)}</div></div>
+      <div class="metric"><div class="k">Сер. успішність</div><div class="v">${pct(n.success)}</div></div>
+      <div class="metric"><div class="k">Повторень</div><div class="v">${n.reps}</div></div>
+    </div>
+    <div class="section-label">Компетентності</div>
+    <ul class="clean bul">${n.comp.map(c=>`<li>${c}</li>`).join('')}</ul>
+    <div class="section-label">Передумови (${incoming.get(id).length})</div>
+    <ul class="clean">${linkList(incoming.get(id),'in')}</ul>
+    <div class="section-label">Відкриває теми (${outgoing.get(id).length})</div>
+    <ul class="clean">${linkList(outgoing.get(id),'out')}</ul>
+  `;
+  panel.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>select(b.dataset.goto));
+  panel.classList.add('open');
+}
+document.getElementById('panelClose').onclick=deselect;
+
+// ------- Старт -------
+fit();
+window.addEventListener('resize',()=>{ if(!selected) fit(); });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,323 @@
+<!doctype html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Граф знань «Математика 5–11» — Квант</title>
+</head>
+<body>
+<title>Граф знань «Математика 5–11» — Квант</title>
+<style>
+  :root {
+    --bg:#eef0f4; --surface:#ffffff; --surface-2:#f7f8fb; --ink:#1a1d29;
+    --muted:#5b6072; --faint:#8b90a3; --line:#d9dce5; --accent:#4f46e5;
+    --edge:#b3b8c6; --shadow:0 6px 24px rgba(26,29,41,.12),0 1px 3px rgba(26,29,41,.08);
+    --s-numbers:#4f46e5; --s-fractions:#7c3aed; --s-algebra:#2563eb; --s-functions:#0d9488;
+    --s-calculus:#0891b2; --s-geometry:#d97706; --s-trigonometry:#e11d48;
+    --s-probability:#16a34a; --s-data:#db2777; --s-measurement:#ca8a04;
+    --node-stroke:#cdd1dd;
+  }
+  @media (prefers-color-scheme: dark){ :root{
+    --bg:#0e1017; --surface:#191c26; --surface-2:#12151d; --ink:#e8eaf1;
+    --muted:#9aa0b4; --faint:#6a7086; --line:#2a2e3c; --accent:#8b8bf5;
+    --edge:#3a3f52; --shadow:0 8px 28px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.4);
+    --s-numbers:#8b8bf5; --s-fractions:#a78bfa; --s-algebra:#60a5fa; --s-functions:#2dd4bf;
+    --s-calculus:#22d3ee; --s-geometry:#fbbf24; --s-trigonometry:#fb7185;
+    --s-probability:#4ade80; --s-data:#f472b6; --s-measurement:#e3b341;
+    --node-stroke:#333849;
+  }}
+  :root[data-theme="light"]{ --bg:#eef0f4;--surface:#ffffff;--surface-2:#f7f8fb;--ink:#1a1d29;--muted:#5b6072;--faint:#8b90a3;--line:#d9dce5;--accent:#4f46e5;--edge:#b3b8c6;--shadow:0 6px 24px rgba(26,29,41,.12),0 1px 3px rgba(26,29,41,.08);--s-numbers:#4f46e5;--s-fractions:#7c3aed;--s-algebra:#2563eb;--s-functions:#0d9488;--s-calculus:#0891b2;--s-geometry:#d97706;--s-trigonometry:#e11d48;--s-probability:#16a34a;--s-data:#db2777;--s-measurement:#ca8a04;--node-stroke:#cdd1dd; }
+  :root[data-theme="dark"]{ --bg:#0e1017;--surface:#191c26;--surface-2:#12151d;--ink:#e8eaf1;--muted:#9aa0b4;--faint:#6a7086;--line:#2a2e3c;--accent:#8b8bf5;--edge:#3a3f52;--shadow:0 8px 28px rgba(0,0,0,.45),0 1px 3px rgba(0,0,0,.4);--s-numbers:#8b8bf5;--s-fractions:#a78bfa;--s-algebra:#60a5fa;--s-functions:#2dd4bf;--s-calculus:#22d3ee;--s-geometry:#fbbf24;--s-trigonometry:#fb7185;--s-probability:#4ade80;--s-data:#f472b6;--s-measurement:#e3b341;--node-stroke:#333849; }
+
+  *{box-sizing:border-box;} html,body{height:100%;margin:0;}
+  body{background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;overflow:hidden;-webkit-font-smoothing:antialiased;}
+  #app{position:fixed;inset:0;}
+  svg#graph{width:100%;height:100%;display:block;touch-action:none;cursor:grab;}
+  svg#graph.panning{cursor:grabbing;}
+
+  .toolbar{position:absolute;top:16px;left:16px;z-index:5;display:flex;flex-direction:column;gap:10px;width:290px;max-width:calc(100vw - 32px);}
+  .card{background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:var(--shadow);}
+  .titlecard{padding:13px 15px;}
+  .titlecard h1{margin:0;font-size:16px;letter-spacing:-.01em;}
+  .titlecard p{margin:4px 0 0;font-size:12px;color:var(--muted);line-height:1.45;}
+  .eyebrow{font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:var(--accent);font-weight:600;margin-bottom:3px;}
+  .searchrow{display:flex;padding:8px;gap:6px;}
+  .searchrow input{flex:1;font:inherit;font-size:13px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface-2);color:var(--ink);}
+  .searchrow input:focus{outline:2px solid var(--accent);outline-offset:1px;}
+  .controls{display:flex;gap:6px;padding:0 8px 8px;}
+  .controls button{flex:1;font:inherit;font-size:12px;font-weight:500;background:var(--surface-2);color:var(--ink);border:1px solid var(--line);border-radius:9px;padding:7px 4px;cursor:pointer;}
+  .controls button:hover{border-color:var(--accent);}
+  .controls button:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .strands{padding:10px 12px 12px;max-height:38vh;overflow:auto;}
+  .strands h2{margin:0 0 7px;font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-weight:600;}
+  .srow{display:flex;align-items:center;gap:9px;font-size:12px;padding:3px 4px;border-radius:7px;cursor:pointer;color:var(--ink);user-select:none;}
+  .srow:hover{background:var(--surface-2);}
+  .srow.off{opacity:.4;}
+  .srow .dot{width:11px;height:11px;border-radius:3px;flex:none;}
+  .srow .cnt{margin-left:auto;font-size:10.5px;color:var(--faint);font-variant-numeric:tabular-nums;}
+
+  .legend2{position:absolute;bottom:16px;left:16px;z-index:5;background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow);padding:10px 13px;font-size:11.5px;color:var(--muted);max-width:270px;}
+  .legend2 b{color:var(--ink);font-weight:600;}
+  .legend2 .lrow{display:flex;align-items:center;gap:8px;padding:2px 0;}
+  .legend2 .ln{width:26px;height:0;border-top:2px solid var(--edge);flex:none;}
+  .legend2 .hint{margin-top:7px;padding-top:7px;border-top:1px solid var(--line);font-size:10.5px;color:var(--faint);line-height:1.5;}
+
+  .panel{position:absolute;top:16px;right:16px;bottom:16px;z-index:6;width:322px;max-width:calc(100vw - 32px);background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);display:flex;flex-direction:column;transform:translateX(calc(100% + 24px));transition:transform .28s cubic-bezier(.4,0,.2,1);overflow:hidden;}
+  .panel.open{transform:none;}
+  @media (prefers-reduced-motion:reduce){.panel{transition:none;}}
+  .phead{padding:17px 18px 13px;border-bottom:1px solid var(--line);position:relative;}
+  .phead .chips{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;}
+  .phead .chip{font-size:11px;font-weight:600;padding:3px 9px;border-radius:999px;color:#fff;}
+  .phead .chip.grade{background:var(--surface-2);color:var(--muted);border:1px solid var(--line);}
+  .phead h3{margin:0;font-size:17px;line-height:1.25;letter-spacing:-.01em;padding-right:28px;}
+  .pclose{position:absolute;top:13px;right:13px;width:26px;height:26px;border:1px solid var(--line);background:var(--surface-2);border-radius:8px;cursor:pointer;color:var(--muted);font-size:14px;display:grid;place-items:center;}
+  .pclose:hover{color:var(--ink);border-color:var(--accent);}
+  .pbody{padding:15px 18px 20px;overflow-y:auto;}
+  .metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+  .metric{background:var(--surface-2);border:1px solid var(--line);border-radius:10px;padding:8px 9px;}
+  .metric .k{font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--faint);}
+  .metric .v{font-size:14px;font-weight:600;margin-top:2px;font-variant-numeric:tabular-nums;}
+  .slabel{font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--faint);font-weight:600;margin:16px 0 8px;}
+  ul.clean{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;}
+  ul.clean.bul li{position:relative;padding-left:15px;font-size:12.5px;color:var(--muted);line-height:1.4;}
+  ul.clean.bul li::before{content:"";position:absolute;left:2px;top:7px;width:5px;height:5px;border-radius:50%;background:var(--accent);}
+  .lnode{display:flex;align-items:stretch;gap:8px;width:100%;text-align:left;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:8px 10px;cursor:pointer;font:inherit;color:var(--ink);}
+  .lnode:hover{border-color:var(--accent);background:var(--surface);}
+  .lnode:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .lnode .bar{width:4px;border-radius:3px;flex:none;}
+  .lnode .lt{flex:1;font-size:12.5px;line-height:1.3;}
+  .lnode .meta{font-size:10.5px;color:var(--faint);margin-top:2px;font-variant-numeric:tabular-nums;}
+  .empty{font-size:12px;color:var(--faint);font-style:italic;}
+
+  .edge{fill:none;transition:opacity .18s,stroke-width .18s;}
+  .node-rect{transition:opacity .18s,stroke .18s;}
+  .node-g{cursor:pointer;} .node-g text{user-select:none;pointer-events:none;}
+  .hidden{display:none;} .dim{opacity:.08;} .edge.dim{opacity:.05;}
+  .grade-head{font-size:13px;font-weight:700;fill:var(--faint);letter-spacing:.02em;}
+  .node-title{font-size:11.5px;font-weight:500;} .node-badge{font-size:9px;font-weight:700;}
+  @media (max-width:760px){ .strands,.legend2{display:none;} .toolbar{width:210px;} .panel{width:calc(100vw - 32px);} }
+</style>
+
+<div id="app">
+  <svg id="graph" role="application" aria-label="Граф знань з математики 5–11 класи">
+    <defs>
+      <marker id="arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M0,0 L8,4 L0,8 z" fill="context-stroke"></path>
+      </marker>
+    </defs>
+  </svg>
+
+  <div class="toolbar">
+    <div class="card titlecard">
+      <div class="eyebrow">Квант · Граф знань</div>
+      <h1>Математика 5–11</h1>
+      <p>Теми програми НУШ і залежності між ними. Клацни тему — побачиш передумови й що вона відкриває. Колонки = класи.</p>
+    </div>
+    <div class="card">
+      <div class="searchrow"><input id="search" type="search" placeholder="Пошук теми…" autocomplete="off"></div>
+      <div class="controls">
+        <button id="zoomIn" title="Збільшити">+</button>
+        <button id="zoomOut" title="Зменшити">−</button>
+        <button id="reset" title="Показати весь граф">Весь граф</button>
+        <button id="theme" title="Тема">☾</button>
+      </div>
+    </div>
+    <div class="card strands" id="strands"><h2>Освітні лінії (клік — сховати)</h2></div>
+  </div>
+
+  <div class="legend2">
+    <b>Типи зв'язків</b>
+    <div class="lrow"><span class="ln" style="border-top-style:solid"></span> обов'язкова</div>
+    <div class="lrow"><span class="ln" style="border-top-style:dashed"></span> бажана</div>
+    <div class="lrow"><span class="ln" style="border-top-style:dotted"></span> рекомендована</div>
+    <div class="hint">Товщина зв'язку = сила впливу (вага 0–1). Колір вузла = освітня лінія.</div>
+  </div>
+
+  <aside class="panel" id="panel" aria-live="polite">
+    <div class="phead">
+      <button class="pclose" id="pclose" aria-label="Закрити">✕</button>
+      <div class="chips"><span class="chip grade" id="pGrade"></span><span class="chip" id="pStrand"></span></div>
+      <h3 id="pTitle"></h3>
+    </div>
+    <div class="pbody" id="pbody"></div>
+  </aside>
+</div>
+
+<script>
+const GRAPH = {"name":"Математика 5–11 (НУШ)","nodes":[{"id":"n5-natural","title":"Натуральні числа і дії","grade":5,"strand":"numbers","difficulty":1,"minutes":45,"threshold":0.8,"comp":["Виконує дії з натуральними числами"]},{"id":"n5-order-round","title":"Порівняння та округлення","grade":5,"strand":"numbers","difficulty":1,"minutes":40,"threshold":0.8,"comp":["Порівнює й округлює числа"]},{"id":"n5-powers-nat","title":"Степінь натурального числа","grade":5,"strand":"numbers","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Підносить до степеня з натуральним показником"]},{"id":"n5-frac-common","title":"Звичайні дроби","grade":5,"strand":"fractions","difficulty":2,"minutes":50,"threshold":0.8,"comp":["Читає й записує звичайні дроби"]},{"id":"n5-frac-addsub-like","title":"Дії з дробами (однакові знаменники)","grade":5,"strand":"fractions","difficulty":2,"minutes":50,"threshold":0.8,"comp":["Додає й віднімає дроби з однаковими знаменниками"]},{"id":"n5-decimals","title":"Десяткові дроби","grade":5,"strand":"fractions","difficulty":2,"minutes":50,"threshold":0.8,"comp":["Читає й записує десяткові дроби"]},{"id":"n5-dec-ops","title":"Дії з десятковими дробами","grade":5,"strand":"fractions","difficulty":2,"minutes":55,"threshold":0.8,"comp":["Виконує дії з десятковими дробами"]},{"id":"n5-percent-intro","title":"Відсотки (вступ)","grade":5,"strand":"numbers","difficulty":2,"minutes":50,"threshold":0.8,"comp":["Знаходить відсоток від числа"]},{"id":"n5-geo-basic","title":"Відрізок, промінь, кут","grade":5,"strand":"geometry","difficulty":1,"minutes":45,"threshold":0.8,"comp":["Розрізняє й будує основні геометричні фігури"]},{"id":"n5-geo-measure","title":"Вимірювання довжин і кутів","grade":5,"strand":"measurement","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Вимірює довжини й градусні міри кутів"]},{"id":"n5-area-rect","title":"Площа й об'єм прямокутника","grade":5,"strand":"measurement","difficulty":2,"minutes":50,"threshold":0.8,"comp":["Обчислює площу прямокутника й об'єм прямокутного паралелепіпеда"]},{"id":"n5-equations-simple","title":"Найпростіші рівняння","grade":5,"strand":"algebra","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Розв'язує рівняння на основі залежностей між компонентами дій"]},{"id":"n6-divisibility","title":"Подільність: НСД і НСК","grade":6,"strand":"numbers","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Знаходить НСД і НСК, застосовує ознаки подільності"]},{"id":"n6-frac-ops-full","title":"Усі дії зі звичайними дробами","grade":6,"strand":"fractions","difficulty":3,"minutes":60,"threshold":0.8,"comp":["Виконує всі дії зі звичайними дробами"]},{"id":"n6-ratio","title":"Відношення","grade":6,"strand":"numbers","difficulty":3,"minutes":45,"threshold":0.8,"comp":["Розуміє відношення двох чисел"]},{"id":"n6-proportion","title":"Пропорція","grade":6,"strand":"numbers","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Розв'язує пропорції"]},{"id":"n6-percent","title":"Відсоткові розрахунки","grade":6,"strand":"numbers","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Розв'язує задачі на відсотки"]},{"id":"n6-rational-neg","title":"Раціональні (додатні й від'ємні) числа","grade":6,"strand":"numbers","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Розуміє від'ємні числа й модуль"]},{"id":"n6-rational-ops","title":"Дії з раціональними числами","grade":6,"strand":"numbers","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Виконує дії з раціональними числами"]},{"id":"n6-coordinate","title":"Координатна пряма і площина","grade":6,"strand":"geometry","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Позначає точки за координатами"]},{"id":"n6-expr-intro","title":"Буквені вирази та їх спрощення","grade":6,"strand":"algebra","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Спрощує буквені вирази"]},{"id":"n6-linear-eq","title":"Лінійні рівняння","grade":6,"strand":"algebra","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Розв'язує лінійні рівняння"]},{"id":"n6-geo-symmetry","title":"Симетрія, коло і круг","grade":6,"strand":"geometry","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Будує симетричні фігури, розуміє коло і круг"]},{"id":"n6-prob-intro","title":"Комбінаторика та ймовірність (вступ)","grade":6,"strand":"probability","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Розв'язує найпростіші комбінаторні задачі"]},{"id":"a7-monomials","title":"Одночлени","grade":7,"strand":"algebra","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Виконує дії з одночленами"]},{"id":"a7-polynomials","title":"Многочлени та дії з ними","grade":7,"strand":"algebra","difficulty":3,"minutes":60,"threshold":0.8,"comp":["Додає, віднімає й множить многочлени"]},{"id":"a7-formulas","title":"Формули скороченого множення","grade":7,"strand":"algebra","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Застосовує формули скороченого множення"]},{"id":"a7-factoring","title":"Розкладання на множники","grade":7,"strand":"algebra","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Розкладає многочлен на множники"]},{"id":"a7-linear-eq","title":"Лінійні рівняння з однією змінною","grade":7,"strand":"algebra","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Розв'язує лінійні рівняння з однією змінною"]},{"id":"a7-linear-systems","title":"Системи лінійних рівнянь","grade":7,"strand":"algebra","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Розв'язує системи двох лінійних рівнянь"]},{"id":"a7-func-intro","title":"Функція та способи її задання","grade":7,"strand":"functions","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Розуміє поняття функції, області визначення й значень"]},{"id":"a7-linear-func","title":"Лінійна функція та її графік","grade":7,"strand":"functions","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Будує й досліджує графік лінійної функції"]},{"id":"a7-stat-intro","title":"Частота, середні значення","grade":7,"strand":"data","difficulty":2,"minutes":45,"threshold":0.8,"comp":["Обчислює частоту й середнє арифметичне"]},{"id":"g7-basics","title":"Основи геометрії, суміжні й вертикальні кути","grade":7,"strand":"geometry","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Застосовує властивості кутів"]},{"id":"g7-triangles","title":"Трикутники та ознаки їх рівності","grade":7,"strand":"geometry","difficulty":3,"minutes":60,"threshold":0.8,"comp":["Доводить рівність трикутників"]},{"id":"g7-parallel","title":"Паралельні прямі","grade":7,"strand":"geometry","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Застосовує ознаки й властивості паралельних прямих"]},{"id":"g7-triangle-props","title":"Властивості трикутників","grade":7,"strand":"geometry","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Застосовує суму кутів і нерівність трикутника"]},{"id":"g7-circle7","title":"Коло і дотична","grade":7,"strand":"geometry","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Застосовує властивості кола й дотичної"]},{"id":"a8-rational-expr","title":"Раціональні (алгебраїчні) вирази","grade":8,"strand":"algebra","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Перетворює алгебраїчні дроби"]},{"id":"a8-rational-ops","title":"Дії з алгебраїчними дробами","grade":8,"strand":"algebra","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Виконує дії з алгебраїчними дробами"]},{"id":"a8-roots","title":"Квадратний корінь","grade":8,"strand":"numbers","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Обчислює й перетворює квадратні корені"]},{"id":"a8-real-numbers","title":"Дійсні числа","grade":8,"strand":"numbers","difficulty":3,"minutes":45,"threshold":0.8,"comp":["Розуміє множину дійсних чисел"]},{"id":"a8-quadratic-eq","title":"Квадратні рівняння","grade":8,"strand":"algebra","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Розв'язує квадратні рівняння"]},{"id":"a8-vieta","title":"Теорема Вієта","grade":8,"strand":"algebra","difficulty":4,"minutes":45,"threshold":0.8,"comp":["Застосовує теорему Вієта"]},{"id":"a8-inequalities","title":"Числові нерівності та їх властивості","grade":8,"strand":"algebra","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Застосовує властивості числових нерівностей"]},{"id":"a8-linear-ineq","title":"Лінійні нерівності та їх системи","grade":8,"strand":"algebra","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Розв'язує лінійні нерівності та системи"]},{"id":"g8-quadrilaterals","title":"Чотирикутники","grade":8,"strand":"geometry","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Класифікує чотирикутники"]},{"id":"g8-parallelogram","title":"Паралелограм та його види","grade":8,"strand":"geometry","difficulty":3,"minutes":60,"threshold":0.8,"comp":["Застосовує властивості паралелограма, ромба, прямокутника"]},{"id":"g8-thales-similar","title":"Теорема Фалеса. Подібність трикутників","grade":8,"strand":"geometry","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Застосовує подібність трикутників"]},{"id":"g8-pythagoras","title":"Теорема Піфагора","grade":8,"strand":"geometry","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Застосовує теорему Піфагора"]},{"id":"g8-trig-right","title":"Тригонометрія прямокутного трикутника","grade":8,"strand":"trigonometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Використовує синус, косинус, тангенс гострого кута"]},{"id":"g8-area-poly","title":"Площі многокутників","grade":8,"strand":"geometry","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Обчислює площі трикутників і чотирикутників"]},{"id":"a9-quadratic-ineq","title":"Квадратні нерівності","grade":9,"strand":"algebra","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Розв'язує квадратні нерівності"]},{"id":"a9-quadratic-func","title":"Квадратична функція","grade":9,"strand":"functions","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Будує й досліджує параболу"]},{"id":"a9-func-transform","title":"Перетворення графіків функцій","grade":9,"strand":"functions","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Виконує перетворення графіків"]},{"id":"a9-systems-nonlinear","title":"Системи рівнянь другого степеня","grade":9,"strand":"algebra","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Розв'язує системи нелінійних рівнянь"]},{"id":"a9-sequences","title":"Числові послідовності","grade":9,"strand":"algebra","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Задає й досліджує послідовності"]},{"id":"a9-arith-prog","title":"Арифметична прогресія","grade":9,"strand":"algebra","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Застосовує формули арифметичної прогресії"]},{"id":"a9-geo-prog","title":"Геометрична прогресія","grade":9,"strand":"algebra","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Застосовує формули геометричної прогресії"]},{"id":"a9-prob","title":"Основи теорії ймовірностей","grade":9,"strand":"probability","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Обчислює ймовірність випадкової події"]},{"id":"a9-stat","title":"Елементи статистики","grade":9,"strand":"data","difficulty":3,"minutes":45,"threshold":0.8,"comp":["Опрацьовує статистичні дані"]},{"id":"g9-trig-any","title":"Теореми синусів і косинусів","grade":9,"strand":"trigonometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Застосовує теореми синусів і косинусів"]},{"id":"g9-solving-triangles","title":"Розв'язування трикутників","grade":9,"strand":"geometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Розв'язує довільні трикутники"]},{"id":"g9-coordinates","title":"Метод координат на площині","grade":9,"strand":"geometry","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Застосовує формули відстані й рівняння прямої/кола"]},{"id":"g9-vectors","title":"Вектори на площині","grade":9,"strand":"geometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Виконує дії з векторами"]},{"id":"g9-circle-poly","title":"Правильні многокутники, довжина кола, площа круга","grade":9,"strand":"geometry","difficulty":3,"minutes":55,"threshold":0.8,"comp":["Обчислює довжину кола й площу круга"]},{"id":"g9-transformations","title":"Геометричні перетворення","grade":9,"strand":"geometry","difficulty":3,"minutes":50,"threshold":0.8,"comp":["Виконує рухи й перетворення подібності"]},{"id":"a10-func-props","title":"Функції та їх властивості","grade":10,"strand":"functions","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Досліджує парність, монотонність, екстремуми"]},{"id":"a10-power-func","title":"Степенева функція, корінь n-го степеня","grade":10,"strand":"functions","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Будує степеневу функцію, оперує коренями n-го степеня"]},{"id":"a10-roots-n","title":"Ірраціональні рівняння","grade":10,"strand":"algebra","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Розв'язує ірраціональні рівняння"]},{"id":"a10-trig-func","title":"Тригонометричні функції","grade":10,"strand":"trigonometry","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Будує й досліджує тригонометричні функції"]},{"id":"a10-trig-identities","title":"Тригонометричні тотожності","grade":10,"strand":"trigonometry","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Перетворює тригонометричні вирази"]},{"id":"a10-trig-eq","title":"Тригонометричні рівняння","grade":10,"strand":"trigonometry","difficulty":5,"minutes":70,"threshold":0.8,"comp":["Розв'язує тригонометричні рівняння"]},{"id":"a10-limits","title":"Границя та неперервність функції","grade":10,"strand":"calculus","difficulty":5,"minutes":60,"threshold":0.8,"comp":["Обчислює границі функцій"]},{"id":"a10-derivative","title":"Похідна функції","grade":10,"strand":"calculus","difficulty":5,"minutes":70,"threshold":0.8,"comp":["Знаходить похідні функцій"]},{"id":"a10-derivative-app","title":"Застосування похідної","grade":10,"strand":"calculus","difficulty":5,"minutes":70,"threshold":0.8,"comp":["Досліджує функції за допомогою похідної"]},{"id":"g10-stereo-axioms","title":"Аксіоми стереометрії","grade":10,"strand":"geometry","difficulty":3,"minutes":45,"threshold":0.8,"comp":["Застосовує аксіоми стереометрії"]},{"id":"g10-lines-planes","title":"Прямі та площини у просторі","grade":10,"strand":"geometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Визначає взаємне розміщення прямих і площин"]},{"id":"g10-parallelism","title":"Паралельність у просторі","grade":10,"strand":"geometry","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Застосовує ознаки паралельності у просторі"]},{"id":"g10-perpendicular","title":"Перпендикулярність у просторі","grade":10,"strand":"geometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Застосовує перпендикулярність прямих і площин"]},{"id":"g10-angles-space","title":"Кути й відстані у просторі","grade":10,"strand":"geometry","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Обчислює кути й відстані у просторі"]},{"id":"a11-exponential-func","title":"Показникова функція","grade":11,"strand":"functions","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Досліджує показникову функцію"]},{"id":"a11-exponential-eq","title":"Показникові рівняння і нерівності","grade":11,"strand":"algebra","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Розв'язує показникові рівняння й нерівності"]},{"id":"a11-log-func","title":"Логарифмічна функція","grade":11,"strand":"functions","difficulty":5,"minutes":60,"threshold":0.8,"comp":["Оперує логарифмами, досліджує логарифмічну функцію"]},{"id":"a11-log-eq","title":"Логарифмічні рівняння і нерівності","grade":11,"strand":"algebra","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Розв'язує логарифмічні рівняння й нерівності"]},{"id":"a11-antiderivative","title":"Первісна та інтеграл","grade":11,"strand":"calculus","difficulty":5,"minutes":70,"threshold":0.8,"comp":["Знаходить первісні, обчислює інтеграли"]},{"id":"a11-integral-app","title":"Застосування інтеграла","grade":11,"strand":"calculus","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Обчислює площі й об'єми за допомогою інтеграла"]},{"id":"a11-combinatorics","title":"Комбінаторика","grade":11,"strand":"probability","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Застосовує правила комбінаторики"]},{"id":"a11-probability","title":"Теорія ймовірностей","grade":11,"strand":"probability","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Обчислює ймовірності складених подій"]},{"id":"a11-statistics","title":"Математична статистика","grade":11,"strand":"data","difficulty":4,"minutes":55,"threshold":0.8,"comp":["Аналізує статистичні розподіли"]},{"id":"g11-polyhedra","title":"Многогранники (призма, піраміда)","grade":11,"strand":"geometry","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Досліджує призми й піраміди"]},{"id":"g11-round-bodies","title":"Тіла обертання (циліндр, конус, куля)","grade":11,"strand":"geometry","difficulty":4,"minutes":65,"threshold":0.8,"comp":["Досліджує тіла обертання"]},{"id":"g11-volumes","title":"Об'єми тіл","grade":11,"strand":"geometry","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Обчислює об'єми многогранників і тіл обертання"]},{"id":"g11-surface-area","title":"Площі поверхонь тіл","grade":11,"strand":"geometry","difficulty":4,"minutes":60,"threshold":0.8,"comp":["Обчислює площі поверхонь тіл"]},{"id":"g11-coordinates-space","title":"Координати й вектори у просторі","grade":11,"strand":"geometry","difficulty":5,"minutes":65,"threshold":0.8,"comp":["Застосовує метод координат у просторі"]}],"edges":[{"from":"n5-natural","to":"n5-order-round","weight":0.9,"type":"mandatory"},{"from":"n5-natural","to":"n5-powers-nat","weight":0.85,"type":"mandatory"},{"from":"n5-natural","to":"n5-frac-common","weight":0.8,"type":"mandatory"},{"from":"n5-frac-common","to":"n5-frac-addsub-like","weight":0.9,"type":"mandatory"},{"from":"n5-natural","to":"n5-decimals","weight":0.7,"type":"mandatory"},{"from":"n5-frac-common","to":"n5-decimals","weight":0.5,"type":"desirable"},{"from":"n5-decimals","to":"n5-dec-ops","weight":0.9,"type":"mandatory"},{"from":"n5-frac-addsub-like","to":"n5-percent-intro","weight":0.6,"type":"mandatory"},{"from":"n5-dec-ops","to":"n5-percent-intro","weight":0.7,"type":"mandatory"},{"from":"n5-natural","to":"n5-equations-simple","weight":0.7,"type":"mandatory"},{"from":"n5-natural","to":"n5-geo-basic","weight":0.3,"type":"desirable"},{"from":"n5-geo-basic","to":"n5-geo-measure","weight":0.85,"type":"mandatory"},{"from":"n5-geo-measure","to":"n5-area-rect","weight":0.6,"type":"mandatory"},{"from":"n5-powers-nat","to":"n5-area-rect","weight":0.4,"type":"desirable"},{"from":"n5-natural","to":"n6-divisibility","weight":0.8,"type":"mandatory"},{"from":"n5-frac-addsub-like","to":"n6-frac-ops-full","weight":0.85,"type":"mandatory"},{"from":"n6-divisibility","to":"n6-frac-ops-full","weight":0.7,"type":"mandatory"},{"from":"n5-frac-common","to":"n6-ratio","weight":0.7,"type":"mandatory"},{"from":"n6-ratio","to":"n6-proportion","weight":0.9,"type":"mandatory"},{"from":"n6-frac-ops-full","to":"n6-proportion","weight":0.5,"type":"desirable"},{"from":"n5-percent-intro","to":"n6-percent","weight":0.8,"type":"mandatory"},{"from":"n6-proportion","to":"n6-percent","weight":0.7,"type":"recommended"},{"from":"n5-dec-ops","to":"n6-percent","weight":0.4,"type":"desirable"},{"from":"n5-natural","to":"n6-rational-neg","weight":0.7,"type":"mandatory"},{"from":"n6-rational-neg","to":"n6-rational-ops","weight":0.9,"type":"mandatory"},{"from":"n5-dec-ops","to":"n6-rational-ops","weight":0.4,"type":"desirable"},{"from":"n6-rational-neg","to":"n6-coordinate","weight":0.7,"type":"mandatory"},{"from":"n5-equations-simple","to":"n6-expr-intro","weight":0.6,"type":"mandatory"},{"from":"n6-rational-ops","to":"n6-expr-intro","weight":0.6,"type":"mandatory"},{"from":"n6-expr-intro","to":"n6-linear-eq","weight":0.85,"type":"mandatory"},{"from":"n5-equations-simple","to":"n6-linear-eq","weight":0.5,"type":"desirable"},{"from":"n5-geo-measure","to":"n6-geo-symmetry","weight":0.5,"type":"desirable"},{"from":"n6-frac-ops-full","to":"n6-prob-intro","weight":0.4,"type":"desirable"},{"from":"n6-expr-intro","to":"a7-monomials","weight":0.8,"type":"mandatory"},{"from":"n5-powers-nat","to":"a7-monomials","weight":0.6,"type":"mandatory"},{"from":"a7-monomials","to":"a7-polynomials","weight":0.9,"type":"mandatory"},{"from":"a7-polynomials","to":"a7-formulas","weight":0.85,"type":"mandatory"},{"from":"a7-formulas","to":"a7-factoring","weight":0.85,"type":"mandatory"},{"from":"a7-polynomials","to":"a7-factoring","weight":0.6,"type":"desirable"},{"from":"n6-linear-eq","to":"a7-linear-eq","weight":0.9,"type":"mandatory"},{"from":"a7-linear-eq","to":"a7-linear-systems","weight":0.85,"type":"mandatory"},{"from":"n6-coordinate","to":"a7-linear-systems","weight":0.6,"type":"mandatory"},{"from":"n6-coordinate","to":"a7-func-intro","weight":0.7,"type":"mandatory"},{"from":"a7-func-intro","to":"a7-linear-func","weight":0.9,"type":"mandatory"},{"from":"a7-linear-eq","to":"a7-linear-func","weight":0.6,"type":"mandatory"},{"from":"a7-linear-func","to":"a7-linear-systems","weight":0.5,"type":"desirable"},{"from":"n6-percent","to":"a7-stat-intro","weight":0.4,"type":"desirable"},{"from":"n5-geo-measure","to":"g7-basics","weight":0.7,"type":"mandatory"},{"from":"n6-geo-symmetry","to":"g7-basics","weight":0.4,"type":"desirable"},{"from":"g7-basics","to":"g7-triangles","weight":0.85,"type":"mandatory"},{"from":"g7-basics","to":"g7-parallel","weight":0.7,"type":"mandatory"},{"from":"g7-triangles","to":"g7-triangle-props","weight":0.85,"type":"mandatory"},{"from":"g7-parallel","to":"g7-triangle-props","weight":0.6,"type":"mandatory"},{"from":"g7-triangles","to":"g7-circle7","weight":0.5,"type":"desirable"},{"from":"a7-factoring","to":"a8-rational-expr","weight":0.85,"type":"mandatory"},{"from":"n6-frac-ops-full","to":"a8-rational-expr","weight":0.6,"type":"mandatory"},{"from":"a8-rational-expr","to":"a8-rational-ops","weight":0.9,"type":"mandatory"},{"from":"n5-powers-nat","to":"a8-roots","weight":0.5,"type":"desirable"},{"from":"a8-roots","to":"a8-real-numbers","weight":0.8,"type":"mandatory"},{"from":"a7-formulas","to":"a8-quadratic-eq","weight":0.7,"type":"mandatory"},{"from":"a8-roots","to":"a8-quadratic-eq","weight":0.85,"type":"mandatory"},{"from":"a7-factoring","to":"a8-quadratic-eq","weight":0.6,"type":"desirable"},{"from":"a8-quadratic-eq","to":"a8-vieta","weight":0.9,"type":"mandatory"},{"from":"a8-real-numbers","to":"a8-inequalities","weight":0.6,"type":"mandatory"},{"from":"a8-inequalities","to":"a8-linear-ineq","weight":0.85,"type":"mandatory"},{"from":"a7-linear-eq","to":"a8-linear-ineq","weight":0.7,"type":"mandatory"},{"from":"g7-triangle-props","to":"g8-quadrilaterals","weight":0.7,"type":"mandatory"},{"from":"g7-parallel","to":"g8-quadrilaterals","weight":0.6,"type":"mandatory"},{"from":"g8-quadrilaterals","to":"g8-parallelogram","weight":0.85,"type":"mandatory"},{"from":"g7-triangle-props","to":"g8-thales-similar","weight":0.7,"type":"mandatory"},{"from":"n6-ratio","to":"g8-thales-similar","weight":0.5,"type":"mandatory"},{"from":"g7-triangles","to":"g8-pythagoras","weight":0.7,"type":"mandatory"},{"from":"a8-roots","to":"g8-pythagoras","weight":0.5,"type":"mandatory"},{"from":"g8-thales-similar","to":"g8-pythagoras","weight":0.4,"type":"desirable"},{"from":"g8-pythagoras","to":"g8-trig-right","weight":0.8,"type":"mandatory"},{"from":"g8-thales-similar","to":"g8-trig-right","weight":0.7,"type":"mandatory"},{"from":"n6-ratio","to":"g8-trig-right","weight":0.4,"type":"desirable"},{"from":"g8-parallelogram","to":"g8-area-poly","weight":0.7,"type":"mandatory"},{"from":"n5-area-rect","to":"g8-area-poly","weight":0.5,"type":"mandatory"},{"from":"a8-quadratic-eq","to":"a9-quadratic-ineq","weight":0.85,"type":"mandatory"},{"from":"a8-linear-ineq","to":"a9-quadratic-ineq","weight":0.7,"type":"mandatory"},{"from":"a8-quadratic-eq","to":"a9-quadratic-func","weight":0.7,"type":"mandatory"},{"from":"a7-linear-func","to":"a9-quadratic-func","weight":0.7,"type":"mandatory"},{"from":"a9-quadratic-func","to":"a9-func-transform","weight":0.7,"type":"mandatory"},{"from":"a7-linear-func","to":"a9-func-transform","weight":0.5,"type":"desirable"},{"from":"a8-quadratic-eq","to":"a9-systems-nonlinear","weight":0.8,"type":"mandatory"},{"from":"a7-linear-systems","to":"a9-systems-nonlinear","weight":0.7,"type":"mandatory"},{"from":"n6-rational-ops","to":"a9-sequences","weight":0.4,"type":"desirable"},{"from":"a9-sequences","to":"a9-arith-prog","weight":0.9,"type":"mandatory"},{"from":"a9-arith-prog","to":"a9-geo-prog","weight":0.6,"type":"mandatory"},{"from":"a9-sequences","to":"a9-geo-prog","weight":0.7,"type":"mandatory"},{"from":"n5-powers-nat","to":"a9-geo-prog","weight":0.4,"type":"desirable"},{"from":"n6-prob-intro","to":"a9-prob","weight":0.6,"type":"mandatory"},{"from":"a7-stat-intro","to":"a9-stat","weight":0.7,"type":"mandatory"},{"from":"a9-prob","to":"a9-stat","weight":0.4,"type":"desirable"},{"from":"g8-trig-right","to":"g9-trig-any","weight":0.8,"type":"mandatory"},{"from":"g9-trig-any","to":"g9-solving-triangles","weight":0.9,"type":"mandatory"},{"from":"g8-pythagoras","to":"g9-solving-triangles","weight":0.6,"type":"mandatory"},{"from":"n6-coordinate","to":"g9-coordinates","weight":0.7,"type":"mandatory"},{"from":"g8-pythagoras","to":"g9-coordinates","weight":0.5,"type":"mandatory"},{"from":"g9-coordinates","to":"g9-vectors","weight":0.8,"type":"mandatory"},{"from":"g8-area-poly","to":"g9-circle-poly","weight":0.6,"type":"mandatory"},{"from":"g7-circle7","to":"g9-circle-poly","weight":0.6,"type":"mandatory"},{"from":"g8-thales-similar","to":"g9-transformations","weight":0.6,"type":"mandatory"},{"from":"n6-geo-symmetry","to":"g9-transformations","weight":0.5,"type":"desirable"},{"from":"a9-quadratic-func","to":"a10-func-props","weight":0.8,"type":"mandatory"},{"from":"a9-func-transform","to":"a10-func-props","weight":0.7,"type":"mandatory"},{"from":"a10-func-props","to":"a10-power-func","weight":0.7,"type":"mandatory"},{"from":"a8-roots","to":"a10-power-func","weight":0.6,"type":"mandatory"},{"from":"a10-power-func","to":"a10-roots-n","weight":0.6,"type":"mandatory"},{"from":"a8-roots","to":"a10-roots-n","weight":0.7,"type":"mandatory"},{"from":"g8-trig-right","to":"a10-trig-func","weight":0.6,"type":"mandatory"},{"from":"a10-func-props","to":"a10-trig-func","weight":0.6,"type":"mandatory"},{"from":"g9-trig-any","to":"a10-trig-func","weight":0.5,"type":"desirable"},{"from":"a10-trig-func","to":"a10-trig-identities","weight":0.85,"type":"mandatory"},{"from":"a10-trig-identities","to":"a10-trig-eq","weight":0.85,"type":"mandatory"},{"from":"a10-trig-func","to":"a10-trig-eq","weight":0.6,"type":"mandatory"},{"from":"a8-quadratic-eq","to":"a10-trig-eq","weight":0.4,"type":"desirable"},{"from":"a10-func-props","to":"a10-limits","weight":0.7,"type":"mandatory"},{"from":"a9-sequences","to":"a10-limits","weight":0.6,"type":"mandatory"},{"from":"a10-limits","to":"a10-derivative","weight":0.85,"type":"mandatory"},{"from":"a10-func-props","to":"a10-derivative","weight":0.6,"type":"mandatory"},{"from":"a10-derivative","to":"a10-derivative-app","weight":0.9,"type":"mandatory"},{"from":"a9-quadratic-func","to":"a10-derivative-app","weight":0.5,"type":"desirable"},{"from":"g7-parallel","to":"g10-stereo-axioms","weight":0.5,"type":"mandatory"},{"from":"g9-coordinates","to":"g10-stereo-axioms","weight":0.3,"type":"desirable"},{"from":"g10-stereo-axioms","to":"g10-lines-planes","weight":0.9,"type":"mandatory"},{"from":"g10-lines-planes","to":"g10-parallelism","weight":0.85,"type":"mandatory"},{"from":"g7-parallel","to":"g10-parallelism","weight":0.5,"type":"mandatory"},{"from":"g10-lines-planes","to":"g10-perpendicular","weight":0.8,"type":"mandatory"},{"from":"g8-pythagoras","to":"g10-perpendicular","weight":0.5,"type":"mandatory"},{"from":"g10-perpendicular","to":"g10-angles-space","weight":0.85,"type":"mandatory"},{"from":"g10-parallelism","to":"g10-angles-space","weight":0.6,"type":"mandatory"},{"from":"g8-trig-right","to":"g10-angles-space","weight":0.5,"type":"mandatory"},{"from":"a10-power-func","to":"a11-exponential-func","weight":0.7,"type":"mandatory"},{"from":"a10-func-props","to":"a11-exponential-func","weight":0.6,"type":"mandatory"},{"from":"a9-geo-prog","to":"a11-exponential-func","weight":0.4,"type":"desirable"},{"from":"a11-exponential-func","to":"a11-exponential-eq","weight":0.9,"type":"mandatory"},{"from":"a10-roots-n","to":"a11-exponential-eq","weight":0.4,"type":"desirable"},{"from":"a11-exponential-func","to":"a11-log-func","weight":0.8,"type":"mandatory"},{"from":"a11-log-func","to":"a11-log-eq","weight":0.9,"type":"mandatory"},{"from":"a11-exponential-eq","to":"a11-log-eq","weight":0.6,"type":"mandatory"},{"from":"a10-derivative","to":"a11-antiderivative","weight":0.9,"type":"mandatory"},{"from":"a10-derivative-app","to":"a11-antiderivative","weight":0.6,"type":"mandatory"},{"from":"a11-antiderivative","to":"a11-integral-app","weight":0.9,"type":"mandatory"},{"from":"n6-prob-intro","to":"a11-combinatorics","weight":0.5,"type":"mandatory"},{"from":"a11-combinatorics","to":"a11-probability","weight":0.8,"type":"mandatory"},{"from":"a9-prob","to":"a11-probability","weight":0.7,"type":"mandatory"},{"from":"a9-stat","to":"a11-statistics","weight":0.7,"type":"mandatory"},{"from":"a11-probability","to":"a11-statistics","weight":0.6,"type":"mandatory"},{"from":"g10-angles-space","to":"g11-polyhedra","weight":0.8,"type":"mandatory"},{"from":"g10-perpendicular","to":"g11-polyhedra","weight":0.7,"type":"mandatory"},{"from":"g8-area-poly","to":"g11-polyhedra","weight":0.5,"type":"mandatory"},{"from":"g11-polyhedra","to":"g11-round-bodies","weight":0.6,"type":"mandatory"},{"from":"g9-circle-poly","to":"g11-round-bodies","weight":0.6,"type":"mandatory"},{"from":"g11-polyhedra","to":"g11-volumes","weight":0.8,"type":"mandatory"},{"from":"g11-round-bodies","to":"g11-volumes","weight":0.7,"type":"mandatory"},{"from":"a11-integral-app","to":"g11-volumes","weight":0.4,"type":"desirable"},{"from":"g11-polyhedra","to":"g11-surface-area","weight":0.7,"type":"mandatory"},{"from":"g11-round-bodies","to":"g11-surface-area","weight":0.7,"type":"mandatory"},{"from":"g9-vectors","to":"g11-coordinates-space","weight":0.85,"type":"mandatory"},{"from":"g10-perpendicular","to":"g11-coordinates-space","weight":0.6,"type":"mandatory"}]};
+const NODES = GRAPH.nodes, EDGES = GRAPH.edges;
+const STRAND_NAME = { numbers:'Числа і дії', fractions:'Дроби', algebra:'Алгебра',
+  functions:'Функції', calculus:'Початки аналізу', geometry:'Геометрія',
+  trigonometry:'Тригонометрія', probability:'Ймовірність', data:'Статистика', measurement:'Вимірювання' };
+const STRAND_ORDER = ['algebra','functions','calculus','trigonometry','numbers','fractions','probability','data','measurement','geometry'];
+const TYPE_LABEL = { mandatory:'обов’язкова', desirable:'бажана', recommended:'рекомендована', deepening:'поглиблення', alternative:'альтернатива' };
+const cssv=(n)=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const strandColor=(s)=>cssv('--s-'+s)||cssv('--muted');
+
+const byId=new Map(NODES.map(n=>[n.id,n]));
+const incoming=new Map(NODES.map(n=>[n.id,[]])), outgoing=new Map(NODES.map(n=>[n.id,[]]));
+for(const e of EDGES){ outgoing.get(e.from).push(e); incoming.get(e.to).push(e); }
+const ancestors=(id)=>{const s=new Set(),st=[id];while(st.length){const c=st.pop();for(const e of incoming.get(c))if(!s.has(e.from)){s.add(e.from);st.push(e.from);}}return s;};
+const descendants=(id)=>{const s=new Set(),st=[id];while(st.length){const c=st.pop();for(const e of outgoing.get(c))if(!s.has(e.to)){s.add(e.to);st.push(e.to);}}return s;};
+
+// ---- layout: колонки за класами ----
+const NODE_W=212, COL_GAP=92, ROW_GAP=20, HEAD_H=40;
+const SVGNS='http://www.w3.org/2000/svg';
+function wrap(str,max){const w=str.split(' ');const L=[];let c='';for(const x of w){if((c+' '+x).trim().length<=max)c=(c+' '+x).trim();else{if(c)L.push(c);c=x;}}if(c)L.push(c);if(L.length>3){L[2]=L[2].slice(0,max-1)+'…';L.length=3;}return L;}
+
+const grades=[...new Set(NODES.map(n=>n.grade))].sort((a,b)=>a-b);
+const layout=new Map();
+grades.forEach((g,ci)=>{
+  const col=NODES.filter(n=>n.grade===g).sort((a,b)=>
+    STRAND_ORDER.indexOf(a.strand)-STRAND_ORDER.indexOf(b.strand) || a.title.localeCompare(b.title));
+  col.forEach(n=>{ n._lines=wrap(n.title,30); n._h=Math.max(46,22+n._lines.length*14); });
+  const colH=col.reduce((s,n)=>s+n._h+ROW_GAP,-ROW_GAP);
+  col._h=colH; col._x=ci*(NODE_W+COL_GAP); col._nodes=col;
+  layout.set(g,col);
+});
+const maxColH=Math.max(...grades.map(g=>layout.get(g)._h));
+grades.forEach(g=>{ const col=layout.get(g); let y=HEAD_H+(maxColH-col._h)/2;
+  col.forEach(n=>{ n._x=col._x; n._y=y; y+=n._h+ROW_GAP; }); });
+let BOUNDS;{ let a=1e9,b=1e9,c=-1e9,d=-1e9; for(const n of NODES){a=Math.min(a,n._x);b=Math.min(b,n._y-HEAD_H);c=Math.max(c,n._x+NODE_W);d=Math.max(d,n._y+n._h);} BOUNDS={minX:a,minY:b,w:c-a,h:d-b}; }
+
+// ---- render ----
+const svg=document.getElementById('graph');
+const root=document.createElementNS(SVGNS,'g'); svg.appendChild(root);
+const edgesG=document.createElementNS(SVGNS,'g'); root.appendChild(edgesG);
+const headG=document.createElementNS(SVGNS,'g'); root.appendChild(headG);
+const nodesG=document.createElementNS(SVGNS,'g'); root.appendChild(nodesG);
+
+grades.forEach(g=>{ const col=layout.get(g); const t=document.createElementNS(SVGNS,'text');
+  t.setAttribute('class','grade-head'); t.setAttribute('x',col._x+NODE_W/2); t.setAttribute('y',18);
+  t.setAttribute('text-anchor','middle'); t.textContent=g+' клас'; headG.appendChild(t); });
+
+const dash={mandatory:'',desirable:'6 5',recommended:'1.5 5',deepening:'8 4 2 4',alternative:'2 7'};
+const edgeEls=[];
+for(const e of EDGES){
+  const a=byId.get(e.from), b=byId.get(e.to);
+  const sameCol=a._x===b._x;
+  const sx=a._x+NODE_W, sy=a._y+a._h/2, tx=sameCol?b._x+NODE_W:b._x, ty=b._y+b._h/2;
+  let d;
+  if(sameCol){ const bow=46; d=`M${sx},${sy} C${sx+bow},${sy} ${tx+bow},${ty} ${tx},${ty}`; }
+  else { const dx=Math.max(38,(tx-sx)*0.45); d=`M${sx},${sy} C${sx+dx},${sy} ${tx-dx},${ty} ${tx},${ty}`; }
+  const p=document.createElementNS(SVGNS,'path');
+  p.setAttribute('d',d); p.setAttribute('class','edge'); p.setAttribute('stroke','var(--edge)');
+  p.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); p.setAttribute('stroke-opacity','.7');
+  p.setAttribute('stroke-linecap','round'); if(dash[e.type])p.setAttribute('stroke-dasharray',dash[e.type]);
+  p.setAttribute('marker-end','url(#arrow)'); edgesG.appendChild(p); edgeEls.push({e,el:p});
+}
+const nodeEls=new Map();
+for(const n of NODES){
+  const g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','node-g');
+  g.setAttribute('transform',`translate(${n._x},${n._y})`); g.setAttribute('tabindex','0'); g.setAttribute('role','button');
+  g.setAttribute('aria-label',n.title+', '+n.grade+' клас');
+  const rect=document.createElementNS(SVGNS,'rect'); rect.setAttribute('class','node-rect');
+  rect.setAttribute('width',NODE_W); rect.setAttribute('height',n._h); rect.setAttribute('rx',11);
+  rect.setAttribute('fill','var(--surface)'); rect.setAttribute('stroke','var(--node-stroke)'); rect.setAttribute('stroke-width','1.4'); g.appendChild(rect);
+  const stripe=document.createElementNS(SVGNS,'rect'); stripe.setAttribute('x',0); stripe.setAttribute('y',0);
+  stripe.setAttribute('width',5); stripe.setAttribute('height',n._h); stripe.setAttribute('rx',2.5);
+  stripe.setAttribute('fill',strandColor(n.strand)); g.appendChild(stripe);
+  const t=document.createElementNS(SVGNS,'text'); t.setAttribute('class','node-title'); t.setAttribute('fill','var(--ink)');
+  const sy=n._lines.length===1?n._h/2+4:n._lines.length===2?n._h/2-3:n._h/2-10;
+  n._lines.forEach((ln,i)=>{ const ts=document.createElementNS(SVGNS,'tspan'); ts.setAttribute('x',13); ts.setAttribute('y',sy+i*13.5); ts.textContent=ln; t.appendChild(ts); });
+  g.appendChild(t);
+  g.addEventListener('click',(ev)=>{ev.stopPropagation();select(n.id);});
+  g.addEventListener('keydown',(ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(n.id);}});
+  nodesG.appendChild(g); nodeEls.set(n.id,{g,rect,stripe,node:n});
+}
+
+// ---- pan/zoom ----
+let tx=0,ty=0,k=1;
+const apply=()=>root.setAttribute('transform',`translate(${tx},${ty}) scale(${k})`);
+function fit(){ const r=svg.getBoundingClientRect(),pad=70;
+  k=Math.min((r.width-pad*2)/BOUNDS.w,(r.height-pad*2)/BOUNDS.h,1.2);
+  tx=(r.width-BOUNDS.w*k)/2-BOUNDS.minX*k; ty=(r.height-BOUNDS.h*k)/2-BOUNDS.minY*k; apply(); }
+function zoomAt(cx,cy,f){ const nk=Math.min(2.4,Math.max(0.15,k*f)); tx=cx-(cx-tx)*(nk/k); ty=cy-(cy-ty)*(nk/k); k=nk; apply(); }
+function centerOn(n){ const r=svg.getBoundingClientRect(); k=Math.min(k,1.1); k=Math.max(k,0.7);
+  tx=r.width/2-(n._x+NODE_W/2)*k; ty=r.height/2-(n._y+n._h/2)*k; apply(); }
+svg.addEventListener('wheel',(e)=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:0.89);},{passive:false});
+let drag=false,moved=false,lx=0,ly=0;
+svg.addEventListener('pointerdown',(e)=>{drag=true;moved=false;lx=e.clientX;ly=e.clientY;svg.setPointerCapture(e.pointerId);svg.classList.add('panning');});
+svg.addEventListener('pointermove',(e)=>{if(!drag)return;const dx=e.clientX-lx,dy=e.clientY-ly;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;tx+=dx;ty+=dy;lx=e.clientX;ly=e.clientY;apply();});
+svg.addEventListener('pointerup',(e)=>{drag=false;svg.classList.remove('panning');if(!moved&&e.target.closest('.node-g')===null)deselect();});
+zoomIn.onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.2);};
+zoomOut.onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,0.83);};
+reset.onclick=()=>{deselect();fit();};
+theme.onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');
+  const nx=cur==='dark'?'light':'dark'; document.documentElement.setAttribute('data-theme',nx);
+  for(const [,o] of nodeEls){ o.stripe.setAttribute('fill',strandColor(o.node.strand)); }
+  buildStrandDots(); if(selected)select(selected); };
+
+// ---- selection ----
+let selected=null;
+function select(id){ selected=id; const up=ancestors(id),down=descendants(id); const rel=new Set([id,...up,...down]);
+  for(const n of NODES){ const o=nodeEls.get(n.id); const on=rel.has(n.id)&&!hiddenStrands.has(n.strand);
+    o.g.classList.toggle('dim',!on);
+    o.rect.setAttribute('stroke',n.id===id?'var(--accent)':'var(--node-stroke)');
+    o.rect.setAttribute('stroke-width',n.id===id?'2.4':'1.4'); }
+  for(const {e,el} of edgeEls){
+    const act=rel.has(e.from)&&rel.has(e.to)&&(((up.has(e.from)||e.from===id)&&(up.has(e.to)||e.to===id))||((down.has(e.to)||e.to===id)&&(down.has(e.from)||e.from===id)));
+    el.classList.toggle('dim',!act);
+    el.setAttribute('stroke',act?'var(--accent)':'var(--edge)');
+    el.setAttribute('stroke-opacity',act?'.95':'.7');
+    el.setAttribute('stroke-width',((0.8+e.weight*2.6)*(act?1.4:1)).toFixed(2));
+  }
+  renderPanel(id);
+}
+function deselect(){ selected=null;
+  for(const n of NODES){ const o=nodeEls.get(n.id); o.g.classList.toggle('dim',hiddenStrands.has(n.strand)?false:false); o.g.classList.remove('dim'); o.rect.setAttribute('stroke','var(--node-stroke)'); o.rect.setAttribute('stroke-width','1.4'); }
+  for(const {e,el} of edgeEls){ el.classList.remove('dim'); el.setAttribute('stroke','var(--edge)'); el.setAttribute('stroke-opacity','.7'); el.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); }
+  applyStrandFilter(); panel.classList.remove('open');
+}
+
+function renderPanel(id){ const n=byId.get(id);
+  pGrade.textContent=n.grade+' клас';
+  pStrand.textContent=STRAND_NAME[n.strand]; pStrand.style.background=strandColor(n.strand);
+  pTitle.textContent=n.title;
+  const dots=(v)=>'●'.repeat(v)+'○'.repeat(5-v);
+  const link=(edges,dir)=> edges.length? edges.slice().sort((x,y)=>y.weight-x.weight).map(e=>{const o=byId.get(dir==='in'?e.from:e.to);
+    return `<button class="lnode" data-goto="${o.id}"><span class="bar" style="background:${strandColor(o.strand)}"></span><span class="lt">${o.title}<span class="meta">${TYPE_LABEL[e.type]} · вага ${e.weight.toFixed(2)} · ${o.grade} кл.</span></span></button>`;
+  }).join(''):'<div class="empty">— немає в межах цього графа</div>';
+  pbody.innerHTML=`<div class="metrics">
+    <div class="metric"><div class="k">Складність</div><div class="v" style="letter-spacing:1px">${dots(n.difficulty)}</div></div>
+    <div class="metric"><div class="k">Час</div><div class="v">${n.minutes} хв</div></div>
+    <div class="metric"><div class="k">Поріг</div><div class="v">${Math.round(n.threshold*100)}%</div></div>
+  </div>
+  <div class="slabel">Компетентності</div><ul class="clean bul">${(n.comp||[]).map(c=>`<li>${c}</li>`).join('')}</ul>
+  <div class="slabel">Передумови (${incoming.get(id).length})</div><ul class="clean">${link(incoming.get(id),'in')}</ul>
+  <div class="slabel">Відкриває теми (${outgoing.get(id).length})</div><ul class="clean">${link(outgoing.get(id),'out')}</ul>`;
+  pbody.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{select(b.dataset.goto);centerOn(byId.get(b.dataset.goto));});
+  panel.classList.add('open');
+}
+pclose.onclick=deselect;
+
+// ---- strand filter ----
+const hiddenStrands=new Set();
+const strandsBox=document.getElementById('strands');
+function strandCounts(){const m={};for(const n of NODES)m[n.strand]=(m[n.strand]||0)+1;return m;}
+function buildStrandList(){ const cnt=strandCounts();
+  strandsBox.querySelectorAll('.srow').forEach(e=>e.remove());
+  STRAND_ORDER.filter(s=>cnt[s]).forEach(s=>{ const row=document.createElement('div'); row.className='srow'+(hiddenStrands.has(s)?' off':''); row.dataset.s=s;
+    row.innerHTML=`<span class="dot" style="background:${strandColor(s)}"></span>${STRAND_NAME[s]}<span class="cnt">${cnt[s]}</span>`;
+    row.onclick=()=>{ hiddenStrands.has(s)?hiddenStrands.delete(s):hiddenStrands.add(s); row.classList.toggle('off'); applyStrandFilter(); if(selected)select(selected); };
+    strandsBox.appendChild(row); });
+}
+function buildStrandDots(){ strandsBox.querySelectorAll('.srow').forEach(r=>{ r.querySelector('.dot').style.background=strandColor(r.dataset.s); }); }
+function applyStrandFilter(){
+  for(const n of NODES){ nodeEls.get(n.id).g.classList.toggle('hidden',hiddenStrands.has(n.strand)); }
+  for(const {e,el} of edgeEls){ const h=hiddenStrands.has(byId.get(e.from).strand)||hiddenStrands.has(byId.get(e.to).strand); el.classList.toggle('hidden',h); }
+}
+buildStrandList();
+
+// ---- search ----
+const search=document.getElementById('search');
+search.addEventListener('keydown',(e)=>{ if(e.key!=='Enter')return; const q=search.value.trim().toLowerCase(); if(!q)return;
+  const hit=NODES.find(n=>n.title.toLowerCase().includes(q)); if(hit){ select(hit.id); centerOn(hit); } });
+
+fit();
+window.addEventListener('resize',()=>{ if(!selected)fit(); });
+</script>
+
+</body>
+</html>
