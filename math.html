@@ -89,6 +89,12 @@
   .lnode .lt{flex:1;font-size:12.5px;line-height:1.3;}
   .lnode .meta{font-size:10.5px;color:var(--faint);margin-top:2px;font-variant-numeric:tabular-nums;}
   .empty{font-size:12px;color:var(--faint);font-style:italic;}
+  .pathwrap{display:flex;flex-wrap:wrap;gap:6px;}
+  .pchip{font:inherit;font-size:11.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-left:3px solid var(--c,var(--accent));border-radius:7px;padding:5px 9px;cursor:pointer;line-height:1.2;text-align:left;}
+  .pchip:hover{border-color:var(--accent);background:var(--surface);}
+  .pchip:focus-visible{outline:2px solid var(--accent);outline-offset:1px;}
+  .pchip b{color:var(--faint);font-weight:700;margin-right:4px;font-variant-numeric:tabular-nums;}
+  .pathmeta{font-size:11.5px;color:var(--faint);margin-top:8px;font-variant-numeric:tabular-nums;}
 
   .edge{fill:none;transition:opacity .18s,stroke-width .18s;}
   .node-rect{transition:opacity .18s,stroke .18s;}
@@ -131,7 +137,7 @@
     <div class="lrow"><span class="ln" style="border-top-style:solid"></span> обов'язкова</div>
     <div class="lrow"><span class="ln" style="border-top-style:dashed"></span> бажана</div>
     <div class="lrow"><span class="ln" style="border-top-style:dotted"></span> рекомендована</div>
-    <div class="hint">Товщина зв'язку = сила впливу (вага 0–1). Колір вузла = освітня лінія.</div>
+    <div class="hint">Товщина = сила впливу, колір вузла = освітня лінія.<br>Клік по темі: <b style="color:var(--accent)">яскраво</b> — усі передумови (що пройти до неї), бліді — що вона відкриває далі.</div>
   </div>
 
   <aside class="panel" id="panel" aria-live="polite">
@@ -160,6 +166,7 @@ const incoming=new Map(NODES.map(n=>[n.id,[]])), outgoing=new Map(NODES.map(n=>[
 for(const e of EDGES){ outgoing.get(e.from).push(e); incoming.get(e.to).push(e); }
 const ancestors=(id)=>{const s=new Set(),st=[id];while(st.length){const c=st.pop();for(const e of incoming.get(c))if(!s.has(e.from)){s.add(e.from);st.push(e.from);}}return s;};
 const descendants=(id)=>{const s=new Set(),st=[id];while(st.length){const c=st.pop();for(const e of outgoing.get(c))if(!s.has(e.to)){s.add(e.to);st.push(e.to);}}return s;};
+const topoOrder=(()=>{const indeg=new Map(NODES.map(n=>[n.id,incoming.get(n.id).length]));const q=NODES.filter(n=>indeg.get(n.id)===0).map(n=>n.id);const o=[];while(q.length){const x=q.shift();o.push(x);for(const e of outgoing.get(x)){indeg.set(e.to,indeg.get(e.to)-1);if(indeg.get(e.to)===0)q.push(e.to);}}return o;})();
 
 // ---- layout: колонки за класами ----
 const NODE_W=212, COL_GAP=92, ROW_GAP=20, HEAD_H=40;
@@ -251,23 +258,27 @@ theme.onclick=()=>{ const cur=document.documentElement.getAttribute('data-theme'
 
 // ---- selection ----
 let selected=null;
-function select(id){ selected=id; const up=ancestors(id),down=descendants(id); const rel=new Set([id,...up,...down]);
-  for(const n of NODES){ const o=nodeEls.get(n.id); const on=rel.has(n.id)&&!hiddenStrands.has(n.strand);
-    o.g.classList.toggle('dim',!on);
-    o.rect.setAttribute('stroke',n.id===id?'var(--accent)':'var(--node-stroke)');
-    o.rect.setAttribute('stroke-width',n.id===id?'2.4':'1.4'); }
+function select(id){ selected=id; const up=ancestors(id),down=descendants(id);
+  for(const n of NODES){ const o=nodeEls.get(n.id);
+    const tier = n.id===id?'sel' : up.has(n.id)?'pre' : down.has(n.id)?'post' : 'off';
+    o.g.classList.remove('dim');
+    o.g.style.opacity = tier==='off'?'0.09' : tier==='post'?'0.42' : '1';
+    o.rect.setAttribute('stroke', (tier==='sel'||tier==='pre')?'var(--accent)':'var(--node-stroke)');
+    o.rect.setAttribute('stroke-width', tier==='sel'?'2.6' : tier==='pre'?'2' : '1.4');
+  }
   for(const {e,el} of edgeEls){
-    const act=rel.has(e.from)&&rel.has(e.to)&&(((up.has(e.from)||e.from===id)&&(up.has(e.to)||e.to===id))||((down.has(e.to)||e.to===id)&&(down.has(e.from)||e.from===id)));
-    el.classList.toggle('dim',!act);
-    el.setAttribute('stroke',act?'var(--accent)':'var(--edge)');
-    el.setAttribute('stroke-opacity',act?'.95':'.7');
-    el.setAttribute('stroke-width',((0.8+e.weight*2.6)*(act?1.4:1)).toFixed(2));
+    const preEdge = up.has(e.from) && (up.has(e.to)||e.to===id);        // веде ДО теми
+    const postEdge = down.has(e.to) && (down.has(e.from)||e.from===id); // веде ВІД теми
+    el.classList.remove('dim');
+    if(preEdge){ el.style.opacity='.98'; el.setAttribute('stroke','var(--accent)'); el.setAttribute('stroke-width',((0.8+e.weight*2.6)*1.6).toFixed(2)); }
+    else if(postEdge){ el.style.opacity='.4'; el.setAttribute('stroke','var(--faint)'); el.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); }
+    else { el.style.opacity='.05'; el.setAttribute('stroke','var(--edge)'); el.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); }
   }
   renderPanel(id);
 }
 function deselect(){ selected=null;
-  for(const n of NODES){ const o=nodeEls.get(n.id); o.g.classList.toggle('dim',hiddenStrands.has(n.strand)?false:false); o.g.classList.remove('dim'); o.rect.setAttribute('stroke','var(--node-stroke)'); o.rect.setAttribute('stroke-width','1.4'); }
-  for(const {e,el} of edgeEls){ el.classList.remove('dim'); el.setAttribute('stroke','var(--edge)'); el.setAttribute('stroke-opacity','.7'); el.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); }
+  for(const n of NODES){ const o=nodeEls.get(n.id); o.g.classList.remove('dim'); o.g.style.opacity=''; o.rect.setAttribute('stroke','var(--node-stroke)'); o.rect.setAttribute('stroke-width','1.4'); }
+  for(const {e,el} of edgeEls){ el.classList.remove('dim'); el.style.opacity=''; el.setAttribute('stroke','var(--edge)'); el.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); }
   applyStrandFilter(); panel.classList.remove('open');
 }
 
@@ -279,11 +290,17 @@ function renderPanel(id){ const n=byId.get(id);
   const link=(edges,dir)=> edges.length? edges.slice().sort((x,y)=>y.weight-x.weight).map(e=>{const o=byId.get(dir==='in'?e.from:e.to);
     return `<button class="lnode" data-goto="${o.id}"><span class="bar" style="background:${strandColor(o.strand)}"></span><span class="lt">${o.title}<span class="meta">${TYPE_LABEL[e.type]} · вага ${e.weight.toFixed(2)} · ${o.grade} кл.</span></span></button>`;
   }).join(''):'<div class="empty">— немає в межах цього графа</div>';
+  const upAll=ancestors(id); const path=topoOrder.filter(x=>upAll.has(x));
+  const totMin=path.reduce((s,x)=>s+(byId.get(x).minutes||0),0);
+  const pathHtml = path.length
+    ? `<div class="pathwrap">${path.map(x=>{const o=byId.get(x);return `<button class="pchip" data-goto="${o.id}" style="--c:${strandColor(o.strand)}"><b>${o.grade}</b> ${o.title}</button>`;}).join('')}</div><div class="pathmeta">${path.length} тем · орієнтовно ~${Math.round(totMin/60)} год на весь ланцюг</div>`
+    : '<div class="empty">Це базова тема — попередніх немає.</div>';
   pbody.innerHTML=`<div class="metrics">
     <div class="metric"><div class="k">Складність</div><div class="v" style="letter-spacing:1px">${dots(n.difficulty)}</div></div>
     <div class="metric"><div class="k">Час</div><div class="v">${n.minutes} хв</div></div>
     <div class="metric"><div class="k">Поріг</div><div class="v">${Math.round(n.threshold*100)}%</div></div>
   </div>
+  <div class="slabel">Щоб дійти до теми — пройти передумови</div>${pathHtml}
   <div class="slabel">Компетентності</div><ul class="clean bul">${(n.comp||[]).map(c=>`<li>${c}</li>`).join('')}</ul>
   <div class="slabel">Передумови (${incoming.get(id).length})</div><ul class="clean">${link(incoming.get(id),'in')}</ul>
   <div class="slabel">Відкриває теми (${outgoing.get(id).length})</div><ul class="clean">${link(outgoing.get(id),'out')}</ul>`;
