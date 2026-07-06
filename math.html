@@ -217,7 +217,7 @@ for(const e of EDGES){
 const nodeEls=new Map();
 for(const n of NODES){
   const g=document.createElementNS(SVGNS,'g'); g.setAttribute('class','node-g');
-  g.setAttribute('transform',`translate(${n._x},${n._y})`); g.setAttribute('tabindex','0'); g.setAttribute('role','button');
+  g.setAttribute('transform',`translate(${n._x},${n._y})`); g.setAttribute('tabindex','0'); g.setAttribute('role','button'); g.setAttribute('data-id',n.id);
   g.setAttribute('aria-label',n.title+', '+n.grade+' клас');
   const rect=document.createElementNS(SVGNS,'rect'); rect.setAttribute('class','node-rect');
   rect.setAttribute('width',NODE_W); rect.setAttribute('height',n._h); rect.setAttribute('rx',11);
@@ -229,7 +229,6 @@ for(const n of NODES){
   const sy=n._lines.length===1?n._h/2+4:n._lines.length===2?n._h/2-3:n._h/2-10;
   n._lines.forEach((ln,i)=>{ const ts=document.createElementNS(SVGNS,'tspan'); ts.setAttribute('x',13); ts.setAttribute('y',sy+i*13.5); ts.textContent=ln; t.appendChild(ts); });
   g.appendChild(t);
-  g.addEventListener('click',(ev)=>{ev.stopPropagation();select(n.id);});
   g.addEventListener('keydown',(ev)=>{if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();select(n.id);}});
   nodesG.appendChild(g); nodeEls.set(n.id,{g,rect,stripe,node:n});
 }
@@ -245,9 +244,13 @@ function centerOn(n){ const r=svg.getBoundingClientRect(); k=Math.min(k,1.1); k=
   tx=r.width/2-(n._x+NODE_W/2)*k; ty=r.height/2-(n._y+n._h/2)*k; apply(); }
 svg.addEventListener('wheel',(e)=>{e.preventDefault();const r=svg.getBoundingClientRect();zoomAt(e.clientX-r.left,e.clientY-r.top,e.deltaY<0?1.12:0.89);},{passive:false});
 let drag=false,moved=false,lx=0,ly=0;
-svg.addEventListener('pointerdown',(e)=>{drag=true;moved=false;lx=e.clientX;ly=e.clientY;svg.setPointerCapture(e.pointerId);svg.classList.add('panning');});
+svg.addEventListener('pointerdown',(e)=>{drag=true;moved=false;lx=e.clientX;ly=e.clientY;try{svg.setPointerCapture(e.pointerId);}catch(_){}svg.classList.add('panning');});
 svg.addEventListener('pointermove',(e)=>{if(!drag)return;const dx=e.clientX-lx,dy=e.clientY-ly;if(Math.abs(dx)+Math.abs(dy)>3)moved=true;tx+=dx;ty+=dy;lx=e.clientX;ly=e.clientY;apply();});
-svg.addEventListener('pointerup',(e)=>{drag=false;svg.classList.remove('panning');if(!moved&&e.target.closest('.node-g')===null)deselect();});
+svg.addEventListener('pointerup',(e)=>{drag=false;svg.classList.remove('panning');try{svg.releasePointerCapture(e.pointerId);}catch(_){}
+  if(moved)return;
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const g=el&&el.closest?el.closest('.node-g'):null;
+  if(g&&g.dataset.id) select(g.dataset.id); else deselect();});
 zoomIn.onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.2);};
 zoomOut.onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,0.83);};
 reset.onclick=()=>{deselect();fit();};

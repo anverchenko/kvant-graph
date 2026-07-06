@@ -380,6 +380,7 @@ for(const n of NODES){
   g.setAttribute('transform',`translate(${p.x},${p.y})`);
   g.setAttribute('tabindex','0');
   g.setAttribute('role','button');
+  g.setAttribute('data-id',n.id);
   g.setAttribute('aria-label',n.title+', '+n.grade+' клас');
 
   const rect=document.createElementNS(SVGNS,'rect');
@@ -417,7 +418,6 @@ for(const n of NODES){
   });
   g.appendChild(t);
 
-  g.addEventListener('click',(ev)=>{ ev.stopPropagation(); select(n.id); });
   g.addEventListener('keydown',(ev)=>{ if(ev.key==='Enter'||ev.key===' '){ ev.preventDefault(); select(n.id);} });
   nodesG.appendChild(g);
   nodeEls.set(n.id,{g,rect});
@@ -442,9 +442,13 @@ svg.addEventListener('wheel',(e)=>{ e.preventDefault(); const r=svg.getBoundingC
   zoomAt(e.clientX-r.left,e.clientY-r.top, e.deltaY<0?1.12:0.89); },{passive:false});
 
 let dragging=false,moved=false,lx=0,ly=0;
-svg.addEventListener('pointerdown',(e)=>{ dragging=true;moved=false;lx=e.clientX;ly=e.clientY; svg.setPointerCapture(e.pointerId); svg.classList.add('panning'); });
+svg.addEventListener('pointerdown',(e)=>{ dragging=true;moved=false;lx=e.clientX;ly=e.clientY; try{svg.setPointerCapture(e.pointerId);}catch(_){} svg.classList.add('panning'); });
 svg.addEventListener('pointermove',(e)=>{ if(!dragging)return; const dx=e.clientX-lx,dy=e.clientY-ly; if(Math.abs(dx)+Math.abs(dy)>3)moved=true; tx+=dx;ty+=dy;lx=e.clientX;ly=e.clientY; apply(); });
-svg.addEventListener('pointerup',(e)=>{ dragging=false; svg.classList.remove('panning'); if(!moved && e.target===svg) deselect(); });
+svg.addEventListener('pointerup',(e)=>{ dragging=false; svg.classList.remove('panning'); try{svg.releasePointerCapture(e.pointerId);}catch(_){}
+  if(moved)return;
+  const el=document.elementFromPoint(e.clientX,e.clientY);
+  const g=el&&el.closest?el.closest('.node-g'):null;
+  if(g&&g.dataset.id) select(g.dataset.id); else deselect(); });
 
 document.getElementById('zoomIn').onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,1.2);};
 document.getElementById('zoomOut').onclick=()=>{const r=svg.getBoundingClientRect();zoomAt(r.width/2,r.height/2,0.83);};
