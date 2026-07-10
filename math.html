@@ -121,8 +121,12 @@
   .ls-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--muted);background:none;border:none;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
   .ls-step:hover{background:var(--surface-2);color:var(--ink);}
   .ls-step.active{background:var(--accent);color:#fff;}
+  .ls-step.empty{opacity:.45;}
+  .ls-step.empty.active{opacity:1;}
   .ls-step .ls-ic{font-size:15px;flex:none;line-height:1;}
   .ls-step .ls-lb{font-size:13px;font-weight:600;}
+  .ls-empty{color:var(--faint);font-style:italic;font-size:14px;margin:12px 0 4px;}
+  .ls-stage.empty .ls-stage-h{opacity:.6;}
   .ls-stage{scroll-margin-top:82px;}
   .ls-stage+.ls-stage{margin-top:12px;border-top:1px solid var(--line);}
   .ls-stage-h{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:18px 0 2px;}
@@ -211,7 +215,7 @@
       <div class="eyebrow">Квант · Граф знань</div>
       <h1>Математика 5–11</h1>
       <p>Теми програми НУШ і залежності між ними. Клацни тему — побачиш передумови й що вона відкриває. Колонки = класи.</p>
-      <div class="buildtag">оновлено 2026-07-10 09:41 · 112 тем</div>
+      <div class="buildtag">оновлено 2026-07-10 09:50 · 112 тем</div>
     </div>
     <div class="card">
       <div class="searchrow"><input id="search" type="search" placeholder="Пошук теми…" autocomplete="off"></div>
@@ -464,8 +468,10 @@ function openLesson(id){
     {key:'explanation',label:'Пояснення',icon:'📖'},
     {key:'example',label:'Приклад',icon:'💡'},
     {key:'practice',label:'Спробуй сам',icon:'✏️'},
+    {key:'training',label:'Тренування',icon:'🏋️'},
     {key:'check',label:'Перевірка',icon:'✅'},
     {key:'summary',label:'Підсумок',icon:'📌'},
+    {key:'result',label:'Результат',icon:'🏅'},
   ];
   const renderSec=s=>{
     if(s.type==='text') return mathH(s.html);
@@ -491,20 +497,21 @@ function openLesson(id){
       q.options.map((opt,oi)=>`<label class="qopt"><input type="radio" name="q${qi}" value="${oi}"><span>${mathT(opt)}</span></label>`).join('')
     }</div><div class="qexplain"></div></div>`).join('')
   }<div class="quiz-actions"><button class="quiz-check" id="quizCheck">Перевірити</button><span class="quiz-score" id="quizScore"></span></div><div class="quiz-done" id="quizDone" hidden></div></div>`;
-  const present=STAGES.filter(st=> st.key==='check' ? (L.quiz||[]).length>0 : (buckets[st.key]||[]).length>0);
-  // Ліва панель етапів
-  steps.innerHTML='<div class="ls-steptitle">Етапи уроку</div>'+present.map((st,ix)=>`<button class="ls-step${ix===0?' active':''}" data-target="stage-${st.key}"><span class="ls-ic">${st.icon}</span><span class="ls-lb">${st.label}</span></button>`).join('');
-  // Контент, згрупований по етапах (кожен — секція з якорем stage-KEY)
-  body.innerHTML=present.map(st=>{
-    const inner= st.key==='check' ? quizHtml : (buckets[st.key]||[]).map(renderSec).join('');
-    return `<section class="ls-stage" id="stage-${st.key}"><h3 class="ls-stage-h"><span class="ls-stage-ic">${st.icon}</span>${st.label}</h3>${inner}</section>`;
+  const hasContent=st=> st.key==='check' ? (L.quiz||[]).length>0 : (buckets[st.key]||[]).length>0;
+  const emptyHtml='<p class="ls-empty">Цей етап поки порожній — заповниться пізніше.</p>';
+  // Ліва панель етапів — показуємо ВСІ канонічні етапи (порожні притемнені)
+  steps.innerHTML='<div class="ls-steptitle">Етапи уроку</div>'+STAGES.map((st,ix)=>`<button class="ls-step${ix===0?' active':''}${hasContent(st)?'':' empty'}" data-target="stage-${st.key}"><span class="ls-ic">${st.icon}</span><span class="ls-lb">${st.label}</span></button>`).join('');
+  // Контент, згрупований по всіх етапах (кожен — секція з якорем stage-KEY; порожні — плейсхолдер)
+  body.innerHTML=STAGES.map(st=>{
+    const inner= st.key==='check' ? ((L.quiz||[]).length? quizHtml : emptyHtml) : (hasContent(st)? (buckets[st.key]||[]).map(renderSec).join('') : emptyHtml);
+    return `<section class="ls-stage${hasContent(st)?'':' empty'}" id="stage-${st.key}"><h3 class="ls-stage-h"><span class="ls-stage-ic">${st.icon}</span>${st.label}</h3>${inner}</section>`;
   }).join('');
   // Клік по етапу — плавний скрол до секції
   steps.querySelectorAll('.ls-step').forEach(b=>{ b.onclick=()=>{ const el=document.getElementById(b.dataset.target); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }; });
   // Підсвітка активного етапу за прокруткою
   if(lessonSpy) lessonSpy.disconnect();
   lessonSpy=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ steps.querySelectorAll('.ls-step').forEach(b=>b.classList.toggle('active', b.dataset.target===e.target.id)); } }); },{root:lessonModal,rootMargin:'-74px 0px -75% 0px',threshold:0});
-  present.forEach(st=>{ const el=document.getElementById('stage-'+st.key); if(el) lessonSpy.observe(el); });
+  STAGES.forEach(st=>{ const el=document.getElementById('stage-'+st.key); if(el) lessonSpy.observe(el); });
   const qc=document.getElementById('quizCheck'); if(qc) qc.onclick=()=>checkQuiz(L.quiz);
   updateQuizBar(0, (L.quiz||[]).length);
   lessonModal.classList.add('open'); lessonModal.scrollTop=0; body.scrollTop=0;
