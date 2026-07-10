@@ -114,35 +114,46 @@
   .lesson-modal{position:fixed;inset:0;z-index:20;background:rgba(10,12,20,.55);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;}
   .lesson-modal.open{display:flex;}
   .lesson-sheet{background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.4);width:100%;max-width:1000px;margin:auto;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 48px);}
-  /* Двоколонкова розкладка: ліва панель етапів (фіксована) + контент (скролиться) */
-  .lesson-body-row{display:flex;align-items:stretch;flex:1;min-height:0;}
-  .lesson-stepper{flex:none;width:212px;padding:18px 12px 26px;border-right:1px solid var(--line);align-self:stretch;overflow-y:auto;background:var(--surface);}
-  .ls-steptitle{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-weight:700;margin:0 0 10px 8px;}
-  .ls-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--muted);background:none;border:none;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
-  .ls-step:hover{background:var(--surface-2);color:var(--ink);}
-  .ls-step.active{background:var(--accent);color:#fff;}
-  .ls-step.empty{opacity:.45;}
-  .ls-step.empty.active{opacity:1;}
+  /* Розкладка «як pifagor»: дві білі картки (степер + контент) на лавандовому тлі */
+  .lesson-body-row{display:flex;align-items:stretch;flex:1;min-height:0;gap:14px;padding:14px;}
+  .lesson-stepper{flex:none;width:216px;align-self:stretch;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 12px;box-shadow:var(--shadow);}
+  .ls-steptitle{font-size:10px;text-transform:uppercase;letter-spacing:.11em;color:var(--faint);font-weight:700;margin:2px 0 12px 8px;}
+  .ls-steplist{position:relative;display:flex;flex-direction:column;gap:2px;}
+  .ls-steplist::before{content:'';position:absolute;left:18px;top:16px;bottom:16px;width:2px;background:var(--line);z-index:0;}
+  .ls-step{position:relative;display:flex;align-items:center;gap:11px;width:100%;text-align:left;font:inherit;color:var(--muted);background:none;border:none;padding:8px 10px 8px 34px;border-radius:10px;cursor:pointer;transition:background .12s,color .12s;}
+  .ls-step:hover{background:var(--surface-2);}
+  .ls-dot{position:absolute;left:12px;top:50%;transform:translateY(-50%);width:12px;height:12px;border-radius:50%;border:2px solid var(--edge);background:var(--surface);z-index:1;transition:background .15s,border-color .15s,box-shadow .15s;}
   .ls-step .ls-ic{font-size:15px;flex:none;line-height:1;}
   .ls-step .ls-lb{font-size:13px;font-weight:600;}
+  .ls-step.done{color:var(--muted);}
+  .ls-step.done .ls-dot{background:var(--accent);border-color:var(--accent);}
+  .ls-step.active{background:color-mix(in srgb,var(--accent) 13%,transparent);}
+  .ls-step.active .ls-dot{background:var(--accent);border-color:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 18%,transparent);}
+  .ls-step.active .ls-lb{color:var(--accent);font-weight:700;}
+  .ls-step.upcoming{color:var(--faint);}
+  .ls-step.empty .ls-lb{opacity:.6;}
+  .ls-step.empty.active .ls-lb{opacity:1;}
   .ls-empty{color:var(--faint);font-style:italic;font-size:14px;margin:12px 0 4px;}
-  .ls-stage.empty .ls-stage-h{opacity:.6;}
-  .ls-stage{scroll-margin-top:12px;}
-  .ls-stage+.ls-stage{margin-top:12px;border-top:1px solid var(--line);}
-  .ls-stage-h{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:18px 0 2px;}
-  .ls-stage-h .ls-stage-ic{font-size:15px;}
+  .ls-stage{scroll-margin-top:14px;}
+  .ls-stage+.ls-stage{margin-top:24px;padding-top:22px;border-top:1px solid var(--line);}
+  .ls-overline{display:flex;align-items:center;gap:8px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);margin:6px 0 6px;}
+  .ls-overline::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--accent);flex:none;}
+  .ls-stage.empty .ls-overline{opacity:.6;}
+  .ls-lesson-title{font-size:26px;line-height:1.15;letter-spacing:-.01em;margin:2px 0 8px;color:var(--ink);}
   @media (max-width:760px){
-    .lesson-body-row{flex-direction:column;}
-    .lesson-stepper{position:static;width:auto;border-right:none;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px;top:0;}
-    .lesson-stepper .ls-steptitle{width:100%;margin-bottom:4px;}
-    .ls-step{width:auto;}
+    .lesson-body-row{flex-direction:column;padding:10px;gap:10px;}
+    .lesson-stepper{width:auto;overflow-y:visible;}
+    .ls-steplist{flex-direction:row;flex-wrap:wrap;gap:4px;}
+    .ls-steplist::before{display:none;}
+    .ls-step{width:auto;padding:6px 10px;}
+    .ls-dot{display:none;}
   }
   .lesson-topbar{flex:none;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 22px;background:var(--surface);border-bottom:1px solid var(--line);}
   .lesson-sub{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;}
   .lesson-topbar h2{margin:3px 0 0;font-size:22px;letter-spacing:-.01em;}
   .lesson-close{flex:none;width:34px;height:34px;border:1px solid var(--line);background:var(--surface-2);border-radius:10px;cursor:pointer;color:var(--muted);font-size:16px;display:grid;place-items:center;}
   .lesson-close:hover{color:var(--ink);border-color:var(--accent);}
-  .lesson-scroll{flex:1;min-width:0;overflow-y:auto;padding:8px 26px 34px;}
+  .lesson-scroll{flex:1;min-width:0;overflow-y:auto;background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow);padding:20px 30px 34px;}
   .lesson-scroll p{line-height:1.65;font-size:15.5px;color:var(--ink);margin:14px 0;}
   .lesson-scroll .muted{color:var(--muted);}
   .lesson-scroll code{background:var(--surface-2);border:1px solid var(--line);border-radius:5px;padding:1px 6px;font-family:ui-monospace,"Cascadia Code",Consolas,monospace;font-size:.92em;color:var(--accent);}
@@ -215,7 +226,7 @@
       <div class="eyebrow">Квант · Граф знань</div>
       <h1>Математика 5–11</h1>
       <p>Теми програми НУШ і залежності між ними. Клацни тему — побачиш передумови й що вона відкриває. Колонки = класи.</p>
-      <div class="buildtag">оновлено 2026-07-10 10:01 · 112 тем</div>
+      <div class="buildtag">оновлено 2026-07-10 10:13 · 112 тем</div>
     </div>
     <div class="card">
       <div class="searchrow"><input id="search" type="search" placeholder="Пошук теми…" autocomplete="off"></div>
@@ -435,7 +446,9 @@ function lsSyncActive(){
   const line=bodyEl.getBoundingClientRect().top+64;
   let curId=stages[0].id;
   stages.forEach(el=>{ if(el.getBoundingClientRect().top<=line) curId=el.id; });
-  stepsEl.querySelectorAll('.ls-step').forEach(b=>b.classList.toggle('active', b.dataset.target===curId));
+  const btns=[...stepsEl.querySelectorAll('.ls-step')];
+  const ai=btns.findIndex(b=>b.dataset.target===curId);
+  btns.forEach((b,i)=>{ b.classList.toggle('active',i===ai); b.classList.toggle('done',i<ai); b.classList.toggle('upcoming',i>ai); });
 }
 let lsRaf=0;
 document.getElementById('lsBody').addEventListener('scroll',()=>{ if(lsRaf) return; lsRaf=requestAnimationFrame(()=>{ lsRaf=0; lsSyncActive(); }); });
@@ -510,12 +523,13 @@ function openLesson(id){
   }<div class="quiz-actions"><button class="quiz-check" id="quizCheck">Перевірити</button><span class="quiz-score" id="quizScore"></span></div><div class="quiz-done" id="quizDone" hidden></div></div>`;
   const hasContent=st=> st.key==='check' ? (L.quiz||[]).length>0 : (buckets[st.key]||[]).length>0;
   const emptyHtml='<p class="ls-empty">Цей етап поки порожній — заповниться пізніше.</p>';
-  // Ліва панель етапів — показуємо ВСІ канонічні етапи (порожні притемнені)
-  steps.innerHTML='<div class="ls-steptitle">Етапи уроку</div>'+STAGES.map((st,ix)=>`<button class="ls-step${ix===0?' active':''}${hasContent(st)?'':' empty'}" data-target="stage-${st.key}"><span class="ls-ic">${st.icon}</span><span class="ls-lb">${st.label}</span></button>`).join('');
-  // Контент, згрупований по всіх етапах (кожен — секція з якорем stage-KEY; порожні — плейсхолдер)
-  body.innerHTML=STAGES.map(st=>{
+  // Ліва панель етапів — усі канонічні етапи (крапки-стани + лінія-конектор, як pifagor)
+  steps.innerHTML='<div class="ls-steptitle">Етапи уроку</div><div class="ls-steplist">'+STAGES.map((st,ix)=>`<button class="ls-step${ix===0?' active':''}${hasContent(st)?'':' empty'}" data-target="stage-${st.key}"><span class="ls-dot"></span><span class="ls-ic">${st.icon}</span><span class="ls-lb">${st.label}</span></button>`).join('')+'</div>';
+  // Контент по етапах: оверлайн «Етап N · Назва», для «Мета» — великий заголовок уроку
+  body.innerHTML=STAGES.map((st,ix)=>{
     const inner= st.key==='check' ? ((L.quiz||[]).length? quizHtml : emptyHtml) : (hasContent(st)? (buckets[st.key]||[]).map(renderSec).join('') : emptyHtml);
-    return `<section class="ls-stage${hasContent(st)?'':' empty'}" id="stage-${st.key}"><h3 class="ls-stage-h"><span class="ls-stage-ic">${st.icon}</span>${st.label}</h3>${inner}</section>`;
+    const titleHtml= st.key==='goal' ? `<h2 class="ls-lesson-title">${esc(L.title)}</h2>` : '';
+    return `<section class="ls-stage${hasContent(st)?'':' empty'}" id="stage-${st.key}"><div class="ls-overline">Етап ${ix+1} · ${st.label}</div>${titleHtml}${inner}</section>`;
   }).join('');
   // Клік по етапу — плавний скрол до секції
   steps.querySelectorAll('.ls-step').forEach(b=>{ b.onclick=()=>{ const el=document.getElementById(b.dataset.target); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }; });
