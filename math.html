@@ -113,6 +113,10 @@
   /* --- Модальне вікно уроку --- */
   .lesson-modal{position:fixed;inset:0;z-index:20;background:rgba(10,12,20,.55);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;}
   .lesson-modal.open{display:flex;}
+  /* Повна сторінка-урок (дизайн pifagor) у fullscreen-iframe — стилі ізольовані */
+  .lesson-frame{position:fixed;inset:0;z-index:30;background:var(--bg);display:none;}
+  .lesson-frame.open{display:block;}
+  .lesson-frame iframe{width:100%;height:100%;border:none;display:block;}
   .lesson-sheet{background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.4);width:100%;max-width:1000px;margin:auto;overflow:hidden;display:flex;flex-direction:column;max-height:calc(100vh - 48px);}
   /* Розкладка «як pifagor»: дві білі картки (степер + контент) на лавандовому тлі */
   .lesson-body-row{display:flex;align-items:stretch;flex:1;min-height:0;gap:14px;padding:14px;}
@@ -226,7 +230,7 @@
       <div class="eyebrow">Квант · Граф знань</div>
       <h1>Математика 5–11</h1>
       <p>Теми програми НУШ і залежності між ними. Клацни тему — побачиш передумови й що вона відкриває. Колонки = класи.</p>
-      <div class="buildtag">оновлено 2026-07-10 10:13 · 112 тем</div>
+      <div class="buildtag">оновлено 2026-07-10 10:44 · 112 тем</div>
     </div>
     <div class="card">
       <div class="searchrow"><input id="search" type="search" placeholder="Пошук теми…" autocomplete="off"></div>
@@ -269,6 +273,7 @@
       </div>
     </div>
   </div>
+  <div class="lesson-frame" id="lessonFrame"><iframe id="lfIframe" title="Урок" loading="lazy"></iframe></div>
 </div>
 
 <script>
@@ -431,13 +436,20 @@ function renderPanel(id){ const n=byId.get(id);
   <div class="slabel">Передумови (${incoming.get(id).length})</div><ul class="clean">${link(incoming.get(id),'in')}</ul>
   <div class="slabel">Відкриває теми (${outgoing.get(id).length})</div><ul class="clean">${link(outgoing.get(id),'out')}</ul>`;
   pbody.querySelectorAll('[data-goto]').forEach(b=>b.onclick=()=>{select(b.dataset.goto);centerOn(byId.get(b.dataset.goto));});
-  const ol=document.getElementById('openLesson'); if(ol) ol.onclick=()=>openLesson(id);
+  const ol=document.getElementById('openLesson'); if(ol) ol.onclick=()=>openLessonPage(id);
   panel.classList.add('open');
 }
 pclose.onclick=deselect;
 
 // ---- урок (модальне вікно) ----
 const lessonModal=document.getElementById('lessonModal');
+// Повна сторінка-урок (дизайн pifagor) у fullscreen-iframe
+const lessonFrame=document.getElementById('lessonFrame');
+const lfIframe=document.getElementById('lfIframe');
+function openLessonPage(id){ lfIframe.src='lesson.html?id='+encodeURIComponent(id); lessonFrame.classList.add('open'); document.body.style.overflow='hidden'; }
+function closeLessonPage(){ lessonFrame.classList.remove('open'); lfIframe.src='about:blank'; document.body.style.overflow=''; }
+window.addEventListener('message',e=>{ if(e && e.data==='kvant-close-lesson') closeLessonPage(); });
+window.addEventListener('keydown',e=>{ if(e.key==='Escape' && lessonFrame.classList.contains('open')) closeLessonPage(); });
 // Підсвітка активного етапу: остання секція, чий верх вище опорної лінії контенту.
 function lsSyncActive(){
   const bodyEl=document.getElementById('lsBody');

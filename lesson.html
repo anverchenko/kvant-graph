@@ -1,0 +1,94 @@
+<!DOCTYPE html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="stylesheet" href="assets/lesson-styles.css"/>
+<link rel="stylesheet" href="assets/phosphor.css"/>
+<title>Урок — КВАНТ</title>
+<style>
+  /* Змінні теми для інлайн-SVG уроків (ті самі, що в графі; акцент = фіолетовий сторінки) */
+  .lesson-page{--ink:#1a1d29;--muted:#5b6072;--faint:#8b90a3;--line:#d9dce5;--surface:#fff;--surface-2:#f4f2ff;--bg:#eef0f4;--accent:var(--lesson-accent,#7c5cff);--node-stroke:#cdd1dd;--s-numbers:#4f46e5;--s-fractions:#7c3aed;--s-algebra:#2563eb;--s-functions:#0d9488;--s-calculus:#0891b2;--s-geometry:#d97706;--s-trigonometry:#e11d48;--s-probability:#16a34a;--s-data:#db2777;--s-measurement:#ca8a04;}
+  /* Контент уроку в дизайні КВАНТ (токени kv + --lesson-accent) */
+  .ls-stage{padding:2px 0 6px;}
+  .ls-stage + .ls-stage{margin-top:30px;padding-top:26px;border-top:1px solid var(--kv-color-border-subtle,#ececf3);}
+  .ls-stage-body{font-size:16px;line-height:1.65;color:var(--kv-color-text-primary,#1b1b2b);}
+  .ls-stage-body p{margin:14px 0;}
+  .ls-stage-body b,.ls-stage-body strong{font-weight:700;}
+  .ls-stage-body ul,.ls-stage-body ol{padding-left:22px;line-height:1.6;}
+  .ls-stage-body li{margin:6px 0;}
+  .ls-empty{color:var(--kv-color-text-tertiary,#9aa0b4);font-style:italic;margin:10px 0;}
+  .ls-notfound{padding:60px 24px;text-align:center;display:flex;flex-direction:column;gap:16px;align-items:center;}
+  .step-item.is-empty{opacity:.5;}
+  .step-item.is-empty.active{opacity:1;}
+  /* Малюнок */
+  .fig{margin:20px 0;padding:16px;background:var(--kv-color-surface-sunken,#f6f6fb);border:1px solid var(--kv-color-border-subtle,#ececf3);border-radius:var(--kv-radius-card-sm,16px);text-align:center;}
+  .fig svg{max-width:100%;height:auto;}
+  .fig figcaption{margin-top:10px;font-size:13px;color:var(--kv-color-text-secondary,#5b6072);line-height:1.5;text-align:left;}
+  /* Виноска */
+  .callout{margin:20px 0;padding:14px 16px;border-radius:14px;border:1px solid var(--kv-color-border-subtle,#ececf3);border-left:4px solid var(--lesson-accent,#7c5cff);background:var(--kv-color-surface-sunken,#f6f6fb);}
+  .callout h4{margin:0 0 6px;font-size:14px;color:var(--kv-color-text-primary,#1b1b2b);}
+  .callout.tip{border-left-color:#0d9488;} .callout.warn{border-left-color:#d97706;}
+  /* Приклад */
+  .example{margin:20px 0;padding:18px 20px;background:var(--kv-color-surface-sunken,#f6f6fb);border:1px solid var(--kv-color-border-subtle,#ececf3);border-radius:16px;}
+  .example .ex-title{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--lesson-accent,#7c5cff);}
+  .example .ex-intro{margin:6px 0 12px;}
+  .ex-steps{display:flex;flex-direction:column;margin:0;padding:0;list-style:none;}
+  .ex-step{display:grid;grid-template-columns:minmax(120px,auto) 1fr;gap:16px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--kv-color-border-default,#dcdce7);}
+  .ex-step:first-child{border-top:none;}
+  .ex-expr{font-size:16px;font-weight:600;color:var(--kv-color-text-primary,#1b1b2b);}
+  .ex-note{font-size:13px;color:var(--kv-color-text-secondary,#5b6072);}
+  .ex-answer{margin-top:14px;padding:9px 15px;background:var(--lesson-accent,#7c5cff);color:#fff;border-radius:10px;font-weight:600;font-size:14.5px;display:inline-block;}
+  /* Квіз */
+  .quiz{margin:6px 0;}
+  .qcard{margin:14px 0;padding:16px 18px;border:1px solid var(--kv-color-border-subtle,#ececf3);border-radius:14px;background:var(--kv-color-surface-card,#fff);}
+  .qq{font-weight:600;font-size:15.5px;margin:0 0 12px;line-height:1.45;color:var(--kv-color-text-primary,#1b1b2b);}
+  .qopts{display:flex;flex-direction:column;gap:8px;}
+  .qopt{display:flex;align-items:center;gap:11px;padding:11px 13px;border:1.5px solid var(--kv-color-border-default,#dcdce7);border-radius:11px;cursor:pointer;font:inherit;font-size:14.5px;text-align:left;background:none;color:var(--kv-color-text-primary,#1b1b2b);transition:border-color .12s,background .12s;}
+  .qopt:hover{border-color:var(--lesson-accent,#7c5cff);}
+  .qradio{width:16px;height:16px;border-radius:50%;border:2px solid var(--kv-color-border-strong,#c4c4d4);flex:none;}
+  .qopt.is-sel{border-color:var(--lesson-accent,#7c5cff);}
+  .qopt.is-sel .qradio{border-color:var(--lesson-accent,#7c5cff);background:var(--lesson-accent,#7c5cff);box-shadow:inset 0 0 0 3px #fff;}
+  .qopt.correct{border-color:#16a34a;background:rgba(22,163,74,.12);font-weight:600;}
+  .qopt.wrong{border-color:#dc2626;background:rgba(220,38,38,.10);}
+  .qexplain{margin-top:10px;font-size:13.5px;color:var(--kv-color-text-secondary,#5b6072);line-height:1.55;display:none;}
+  .qexplain.show{display:block;} .qexplain.ok{color:#16a34a;} .qexplain b{color:var(--kv-color-text-primary,#1b1b2b);}
+  .quiz-check{margin-top:6px;padding:11px 24px;font:inherit;font-size:15px;font-weight:600;color:#fff;background:var(--lesson-accent,#7c5cff);border:none;border-radius:12px;cursor:pointer;}
+  .quiz-check:hover{filter:brightness(1.06);}
+  /* Формули (легкий LaTeX) */
+  .msqrt{display:inline-flex;align-items:flex-start;white-space:nowrap;}
+  .msqrt>.mrad{font-size:1.28em;line-height:.9;margin-right:1px;}
+  .msqrt>.mradx{border-top:1.6px solid currentColor;padding:.14em .28em 0 .12em;}
+  .mfrac{display:inline-flex;flex-direction:column;vertical-align:middle;text-align:center;margin:0 .18em;font-size:.94em;}
+  .mfrac>.mnum{border-bottom:1.6px solid currentColor;padding:0 .38em .05em;}
+  .mfrac>.mden{padding:.05em .38em 0;}
+  .ls-stage-body sup{font-size:.72em;line-height:0;} .ls-stage-body sub{font-size:.72em;line-height:0;}
+</style>
+</head>
+<body class="min-h-screen bg-background font-sans text-foreground antialiased">
+<div class="lesson-page" data-subject="math" style="--lesson-accent:var(--kv-color-subject-math);--lesson-accent-surface:var(--kv-color-subject-math-surface)">
+  <header class="lesson-topbar">
+    <div class="lt-brand"><img class="lt-logo-mark" src="assets/img/kvant-mark.png" alt="КВАНТ"/><img class="lt-logo-word" src="assets/img/kvant-wordmark-horizontal.png" alt="" aria-hidden="true"/></div>
+    <div class="lt-context" id="ltContext"></div>
+    <a class="lt-exit" href="math.html" aria-label="Вийти з уроку" title="Повернутись до графа"><i class="ph ph-sign-out" aria-hidden="true"></i><span>Вийти з уроку</span></a>
+  </header>
+  <div class="lesson-body">
+    <div class="sidebar-wrap"><aside class="lesson-stepper" aria-label="Етапи уроку">
+      <div class="step-head"><span class="step-head-title">Етапи уроку</span><button class="pin-btn" type="button" aria-pressed="true" aria-label="Закріпити панель" title="Закріпити панель"><i class="ph-fill ph-push-pin" aria-hidden="true"></i></button></div>
+      <nav class="stepper" aria-label="Етапи уроку"><div class="step-list" id="stepList"></div></nav>
+    </aside></div>
+    <main class="lesson-content"><div class="lesson-slot" id="lessonContent"></div></main>
+    <aside class="ai-panel" aria-label="AI-ментор">
+      <section class="ai-artifacts">
+        <div class="ai-artifacts-head"><span class="ai-artifacts-spark" aria-hidden="true"><i class="ph-fill ph-lightbulb"></i></span><span class="ai-artifacts-title">Підказка</span><span class="ai-artifacts-count">0</span></div>
+        <div class="ai-artifacts-body"></div>
+        <div class="ai-motiv"><span class="ai-motiv-ic" aria-hidden="true"><i class="ph-fill ph-hand-heart"></i></span><p class="ai-motiv-txt">Ти зможеш! Якщо щось незрозуміло — постав запитання, я поруч і допоможу.</p></div>
+      </section>
+      <section class="ai-chatcard">
+        <div class="ai-head"><span class="ai-bot" aria-hidden="true"><i class="ph-fill ph-sparkle"></i></span><span class="ai-head-txt"><span class="ai-head-name">AI-ментор</span><span class="ai-head-sub">поруч на кожному етапі</span></span></div>
+        <div class="ai-chat"></div>
+        <form class="ai-input" onsubmit="return false"><textarea class="ai-textarea" rows="1" placeholder="Напиши своє запитання…" aria-label="Напиши своє запитання…"></textarea><button class="ai-send" type="submit" aria-label="Відправити"><i class="ph-fill ph-paper-plane-right"></i></button></form>
+        <p class="ai-disclaimer">AI-ментор може помилятися. Перевіряй важливу інформацію.</p>
+      </section>
+    </aside>
+  </div>
+</div>
+<script src="lesson-data.js"></script>
+<script src="lesson.js" defer></script>
+</body></html>
