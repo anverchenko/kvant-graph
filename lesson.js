@@ -46,7 +46,7 @@
       i++; var n = '';
       while (i < s.length && /[a-zA-Z]/.test(s[i])) { n += s[i++]; }
       if (n === 'sqrt') { return '<span class="msqrt"><span class="mrad">√</span><span class="mradx">' + arg() + '</span></span>'; }
-      if (n === 'frac') { var a = arg(), b = arg(); return '<span class="mfrac"><span class="mnum">' + a + '</span><span class="mden">' + b + '</span></span>'; }
+      if (n === 'frac' || n === 'dfrac' || n === 'tfrac') { var a = arg(), b = arg(); return '<span class="mfrac"><span class="mnum">' + a + '</span><span class="mden">' + b + '</span></span>'; }
       var m = { cdot: '·', times: '×', pm: '±', ge: '≥', le: '≤', neq: '≠', approx: '≈', div: '÷', pi: 'π', alpha: 'α', beta: 'β', gamma: 'γ', theta: 'θ', circ: '°', degree: '°' };
       if (m[n] != null) return m[n];
       if (n === '') { var ch = s[i++]; return ec(ch || ''); }
