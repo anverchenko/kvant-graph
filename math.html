@@ -103,6 +103,7 @@
   .hidden{display:none;} .dim{opacity:.08;} .edge.dim{opacity:.05;}
   .grade-head{font-size:13px;font-weight:700;fill:var(--faint);letter-spacing:.02em;}
   .node-title{font-size:11.5px;font-weight:500;} .node-badge{font-size:9px;font-weight:700;}
+  .node-g.has-lesson .node-title{fill:#1a1d29!important;font-weight:700;}
   @media (max-width:760px){ .strands,.legend2{display:none;} .toolbar{width:210px;} .panel{width:calc(100vw - 32px);} }
 
   /* --- Кнопка «Відкрити урок» в панелі --- */
@@ -230,7 +231,7 @@
       <div class="eyebrow">Квант · Граф знань</div>
       <h1>Математика 5–11</h1>
       <p>Теми програми НУШ і залежності між ними. Клацни тему — побачиш передумови й що вона відкриває. Колонки = класи.</p>
-      <div class="buildtag">оновлено 2026-07-10 11:27 · 112 тем</div>
+      <div class="buildtag">оновлено 2026-07-10 12:04 · 112 тем</div>
     </div>
     <div class="card">
       <div class="searchrow"><input id="search" type="search" placeholder="Пошук теми…" autocomplete="off"></div>
@@ -249,6 +250,7 @@
     <div class="lrow"><span class="ln" style="border-top-style:solid"></span> обов'язкова</div>
     <div class="lrow"><span class="ln" style="border-top-style:dashed"></span> бажана</div>
     <div class="lrow"><span class="ln" style="border-top-style:dotted"></span> рекомендована</div>
+    <div class="lrow"><span class="ln" style="border-top:none;width:18px;height:12px;border-radius:3px;background:#ffdb4d;border:2px solid #d99e00"></span> тема з готовим уроком</div>
     <div class="hint">Товщина = сила впливу, колір вузла = освітня лінія.<br>Клік по темі: <b style="color:var(--accent)">яскраво</b> — усі передумови (що пройти до неї), бліді — що вона відкриває далі.</div>
   </div>
 
@@ -349,6 +351,7 @@ for(const n of NODES){
   const rect=document.createElementNS(SVGNS,'rect'); rect.setAttribute('class','node-rect');
   rect.setAttribute('width',NODE_W); rect.setAttribute('height',n._h); rect.setAttribute('rx',11);
   rect.setAttribute('fill','var(--surface)'); rect.setAttribute('stroke','var(--node-stroke)'); rect.setAttribute('stroke-width','1.4'); g.appendChild(rect);
+  if(LESSONS[n.id]){ g.classList.add('has-lesson'); rect.setAttribute('fill','#ffdb4d'); rect.setAttribute('stroke','#d99e00'); rect.setAttribute('stroke-width','2.6'); }
   const stripe=document.createElementNS(SVGNS,'rect'); stripe.setAttribute('x',0); stripe.setAttribute('y',0);
   stripe.setAttribute('width',5); stripe.setAttribute('height',n._h); stripe.setAttribute('rx',2.5);
   stripe.setAttribute('fill',strandColor(n.strand)); g.appendChild(stripe);
@@ -393,8 +396,9 @@ function select(id){ selected=id; const up=ancestors(id),down=descendants(id);
     const tier = n.id===id?'sel' : up.has(n.id)?'pre' : down.has(n.id)?'post' : 'off';
     o.g.classList.remove('dim');
     o.g.style.opacity = tier==='off'?'0.09' : tier==='post'?'0.42' : '1';
-    o.rect.setAttribute('stroke', (tier==='sel'||tier==='pre')?'var(--accent)':'var(--node-stroke)');
-    o.rect.setAttribute('stroke-width', tier==='sel'?'2.6' : tier==='pre'?'2' : '1.4');
+    const hl=o.g.classList.contains('has-lesson');
+    o.rect.setAttribute('stroke', (tier==='sel'||tier==='pre')?'var(--accent)':(hl?'#d99e00':'var(--node-stroke)'));
+    o.rect.setAttribute('stroke-width', tier==='sel'?'2.6' : tier==='pre'?'2' : (hl?'2.6':'1.4'));
   }
   for(const {e,el} of edgeEls){
     const preEdge = up.has(e.from) && (up.has(e.to)||e.to===id);        // веде ДО теми
@@ -407,7 +411,7 @@ function select(id){ selected=id; const up=ancestors(id),down=descendants(id);
   renderPanel(id);
 }
 function deselect(){ selected=null;
-  for(const n of NODES){ const o=nodeEls.get(n.id); o.g.classList.remove('dim'); o.g.style.opacity=''; o.rect.setAttribute('stroke','var(--node-stroke)'); o.rect.setAttribute('stroke-width','1.4'); }
+  for(const n of NODES){ const o=nodeEls.get(n.id); const hl=o.g.classList.contains('has-lesson'); o.g.classList.remove('dim'); o.g.style.opacity=''; o.rect.setAttribute('stroke',hl?'#d99e00':'var(--node-stroke)'); o.rect.setAttribute('stroke-width',hl?'2.6':'1.4'); }
   for(const {e,el} of edgeEls){ el.classList.remove('dim'); el.style.opacity=''; el.setAttribute('stroke','var(--edge)'); el.setAttribute('stroke-width',(0.8+e.weight*2.6).toFixed(2)); }
   applyStrandFilter(); panel.classList.remove('open');
 }
