@@ -113,7 +113,26 @@
   /* --- Модальне вікно уроку --- */
   .lesson-modal{position:fixed;inset:0;z-index:20;background:rgba(10,12,20,.55);backdrop-filter:blur(3px);display:none;align-items:flex-start;justify-content:center;padding:24px 16px;overflow:auto;}
   .lesson-modal.open{display:flex;}
-  .lesson-sheet{background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.4);width:100%;max-width:760px;margin:auto;overflow:hidden;}
+  .lesson-sheet{background:var(--bg);border:1px solid var(--line);border-radius:18px;box-shadow:0 24px 70px rgba(0,0,0,.4);width:100%;max-width:1000px;margin:auto;overflow:hidden;}
+  /* Двоколонкова розкладка: ліва панель етапів + контент */
+  .lesson-body-row{display:flex;align-items:flex-start;}
+  .lesson-stepper{flex:none;width:212px;padding:18px 12px 26px;border-right:1px solid var(--line);position:sticky;top:73px;align-self:flex-start;background:var(--surface);}
+  .ls-steptitle{font-size:10px;text-transform:uppercase;letter-spacing:.1em;color:var(--faint);font-weight:700;margin:0 0 10px 8px;}
+  .ls-step{display:flex;align-items:center;gap:10px;width:100%;text-align:left;font:inherit;color:var(--muted);background:none;border:none;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .12s,color .12s;}
+  .ls-step:hover{background:var(--surface-2);color:var(--ink);}
+  .ls-step.active{background:var(--accent);color:#fff;}
+  .ls-step .ls-ic{font-size:15px;flex:none;line-height:1;}
+  .ls-step .ls-lb{font-size:13px;font-weight:600;}
+  .ls-stage{scroll-margin-top:82px;}
+  .ls-stage+.ls-stage{margin-top:12px;border-top:1px solid var(--line);}
+  .ls-stage-h{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--accent);margin:18px 0 2px;}
+  .ls-stage-h .ls-stage-ic{font-size:15px;}
+  @media (max-width:760px){
+    .lesson-body-row{flex-direction:column;}
+    .lesson-stepper{position:static;width:auto;border-right:none;border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:4px;top:0;}
+    .lesson-stepper .ls-steptitle{width:100%;margin-bottom:4px;}
+    .ls-step{width:auto;}
+  }
   .lesson-topbar{position:sticky;top:0;z-index:2;display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 22px;background:var(--surface);border-bottom:1px solid var(--line);}
   .lesson-sub{font-size:11px;text-transform:uppercase;letter-spacing:.1em;color:var(--accent);font-weight:700;}
   .lesson-topbar h2{margin:3px 0 0;font-size:22px;letter-spacing:-.01em;}
@@ -192,7 +211,7 @@
       <div class="eyebrow">Квант · Граф знань</div>
       <h1>Математика 5–11</h1>
       <p>Теми програми НУШ і залежності між ними. Клацни тему — побачиш передумови й що вона відкриває. Колонки = класи.</p>
-      <div class="buildtag">оновлено 2026-07-08 18:54 · 112 тем</div>
+      <div class="buildtag">оновлено 2026-07-10 09:41 · 112 тем</div>
     </div>
     <div class="card">
       <div class="searchrow"><input id="search" type="search" placeholder="Пошук теми…" autocomplete="off"></div>
@@ -229,7 +248,10 @@
         <div class="lesson-heads"><div class="lesson-sub" id="lsSub"></div><h2 id="lsTitle"></h2></div>
         <button class="lesson-close" id="lsClose" aria-label="Закрити урок">✕</button>
       </div>
-      <div class="lesson-scroll" id="lsBody"></div>
+      <div class="lesson-body-row">
+        <aside class="lesson-stepper" id="lsSteps" aria-label="Етапи уроку"></aside>
+        <div class="lesson-scroll" id="lsBody"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -401,6 +423,7 @@ pclose.onclick=deselect;
 
 // ---- урок (модальне вікно) ----
 const lessonModal=document.getElementById('lessonModal');
+let lessonSpy=null;
 function esc(s){ return String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c])); }
 // Легкий рендерер підмножини LaTeX: \sqrt{}, \frac{}{}, ^, _, грецькі/оператори.
 function renderMath(src){
@@ -434,22 +457,57 @@ function openLesson(id){
   document.getElementById('lsSub').textContent=L.subtitle+' · ~'+L.minutes+' хв';
   document.getElementById('lsTitle').textContent=L.title;
   const body=document.getElementById('lsBody');
-  const secHtml=(L.sections||[]).map(s=>{
+  const steps=document.getElementById('lsSteps');
+  // Канонічні етапи (дзеркало STAGES у data/lessons/types.ts)
+  const STAGES=[
+    {key:'goal',label:'Мета',icon:'🎯'},
+    {key:'explanation',label:'Пояснення',icon:'📖'},
+    {key:'example',label:'Приклад',icon:'💡'},
+    {key:'practice',label:'Спробуй сам',icon:'✏️'},
+    {key:'check',label:'Перевірка',icon:'✅'},
+    {key:'summary',label:'Підсумок',icon:'📌'},
+  ];
+  const renderSec=s=>{
     if(s.type==='text') return mathH(s.html);
     if(s.type==='figure') return `<figure class="fig">${s.svg}${s.caption?`<figcaption>${mathH(s.caption)}</figcaption>`:''}</figure>`;
     if(s.type==='callout') return `<div class="callout ${s.kind}">${s.title?`<h4>${mathH(s.title)}</h4>`:''}${mathH(s.html)}</div>`;
     if(s.type==='example') return `<div class="example"><div class="ex-title">${s.title}</div>${s.intro?`<div class="ex-intro">${mathH(s.intro)}</div>`:''}<ul class="ex-steps">${s.steps.map(st=>`<li class="ex-step"><span class="ex-expr">${mathT(st.expr)}</span><span class="ex-note">${mathH(st.note||'')}</span></li>`).join('')}</ul><div class="ex-answer">Відповідь: ${mathT(s.answer)}</div></div>`;
     return '';
-  }).join('');
+  };
+  // Розкладка секцій по етапах (та сама логіка, що assignStages в export-lessons)
+  const buckets={};
+  (L.sections||[]).forEach((s,i)=>{
+    let st=s.stage;
+    if(!st){
+      if(i===0 && s.type==='text') st='goal';
+      else if(s.type==='example') st='example';
+      else if(s.type==='callout' && /^(Коротко|Підсумок)/i.test(s.title||'')) st='summary';
+      else st='explanation';
+    }
+    (buckets[st]=buckets[st]||[]).push(s);
+  });
   const quizHtml=`<div class="quiz"><h3>Перевір себе</h3><p class="qsub">Обери відповіді. Правильні зафіксуються зеленим, а неправильні можна перепройти — тисни «Перевірити», поки не буде <b>100%</b>.</p><div class="quiz-progress"><div class="quiz-bar" id="quizBar"></div></div>${
     (L.quiz||[]).map((q,qi)=>`<div class="qcard" data-qi="${qi}"><p class="qq">${qi+1}. ${mathT(q.q)}</p><div class="qopts">${
       q.options.map((opt,oi)=>`<label class="qopt"><input type="radio" name="q${qi}" value="${oi}"><span>${mathT(opt)}</span></label>`).join('')
     }</div><div class="qexplain"></div></div>`).join('')
   }<div class="quiz-actions"><button class="quiz-check" id="quizCheck">Перевірити</button><span class="quiz-score" id="quizScore"></span></div><div class="quiz-done" id="quizDone" hidden></div></div>`;
-  body.innerHTML=secHtml+quizHtml;
-  document.getElementById('quizCheck').onclick=()=>checkQuiz(L.quiz);
+  const present=STAGES.filter(st=> st.key==='check' ? (L.quiz||[]).length>0 : (buckets[st.key]||[]).length>0);
+  // Ліва панель етапів
+  steps.innerHTML='<div class="ls-steptitle">Етапи уроку</div>'+present.map((st,ix)=>`<button class="ls-step${ix===0?' active':''}" data-target="stage-${st.key}"><span class="ls-ic">${st.icon}</span><span class="ls-lb">${st.label}</span></button>`).join('');
+  // Контент, згрупований по етапах (кожен — секція з якорем stage-KEY)
+  body.innerHTML=present.map(st=>{
+    const inner= st.key==='check' ? quizHtml : (buckets[st.key]||[]).map(renderSec).join('');
+    return `<section class="ls-stage" id="stage-${st.key}"><h3 class="ls-stage-h"><span class="ls-stage-ic">${st.icon}</span>${st.label}</h3>${inner}</section>`;
+  }).join('');
+  // Клік по етапу — плавний скрол до секції
+  steps.querySelectorAll('.ls-step').forEach(b=>{ b.onclick=()=>{ const el=document.getElementById(b.dataset.target); if(el) el.scrollIntoView({behavior:'smooth',block:'start'}); }; });
+  // Підсвітка активного етапу за прокруткою
+  if(lessonSpy) lessonSpy.disconnect();
+  lessonSpy=new IntersectionObserver(es=>{ es.forEach(e=>{ if(e.isIntersecting){ steps.querySelectorAll('.ls-step').forEach(b=>b.classList.toggle('active', b.dataset.target===e.target.id)); } }); },{root:lessonModal,rootMargin:'-74px 0px -75% 0px',threshold:0});
+  present.forEach(st=>{ const el=document.getElementById('stage-'+st.key); if(el) lessonSpy.observe(el); });
+  const qc=document.getElementById('quizCheck'); if(qc) qc.onclick=()=>checkQuiz(L.quiz);
   updateQuizBar(0, (L.quiz||[]).length);
-  lessonModal.classList.add('open'); body.scrollTop=0;
+  lessonModal.classList.add('open'); lessonModal.scrollTop=0; body.scrollTop=0;
 }
 function updateQuizBar(done,total){
   const bar=document.getElementById('quizBar'); if(bar) bar.style.width=(total?Math.round(done/total*100):0)+'%';
